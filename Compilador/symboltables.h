@@ -4,6 +4,7 @@
 
 typedef enum {
     integer,
+    boolean,
     none,
 } TipoSimbolo;
 

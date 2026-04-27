@@ -2,7 +2,7 @@
 
 #define arvorebinaria
 
-typedef *void Elemento;
+typedef void* Elemento;
 
 typedef struct NoArvoreBinaria {
     struct NoArvoreBinaria* esq;

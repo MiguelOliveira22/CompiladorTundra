@@ -1,0 +1,6 @@
+program mainMedico(nomeCompleto,idade,genero,sexo);
+
+function jamesgun():
+    var commandPrompt := -134200;
+
+.

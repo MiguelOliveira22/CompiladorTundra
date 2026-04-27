@@ -61,22 +61,22 @@ int main(int argc, char* argv[])
     
     if (file == NULL) { exit(2); }
     
-    token currentToken;
+    /* token currentToken;
     do {
-        currentToken = analisarArquivo(file);
+        currentToken = analisarArquivo(file, 0);
         printf("%s\n", currentToken.tokenValor);
     }
     while (strcmp(currentToken.tokenValor, "EOF") != 0);
     
     fclose(file);
     
-    exit(0);
+    exit(0); */
     
-    //compilaPrograma(file);
+    compilaPrograma(file, 0);
 }
 
 // Helper Functions
-void compilaPrograma(FILE* file)
+void compilaPrograma(FILE* file, int currentScope)
 {
     token tokenValue;
     
@@ -119,7 +119,7 @@ void compilaPrograma(FILE* file)
         sairErro(5, file);
     }
     
-    // compilaBloco();
+    compilaBloco(file, currentScope);
     
     tokenValue = analisarArquivo(file);
     if (strcmp(tokenValue.tokenValor, "ponto") != 0) {
@@ -135,6 +135,39 @@ void compilaPrograma(FILE* file)
     
     printf("Programa sintaticamente correto!");
     sairErro(0, file);
+}
+
+void compilaBloco(FILE *file, int currentScope) {
+    token tokenValue;
+    
+    tokenValue = analisarArquivo(file);
+    while (strcmp(tokenValue.tokenValor, "inicio") != 0) {
+        tokenValue = analisarArquivo(file);
+        
+        if (strcmp(tokenValue.tokenValor, "rotulo") == 0) {
+            tokenValue = analisarArquivo(file);
+            
+            while (strcmp(tokenValue.tokenValor, "pontoevirgula") != 0) {
+                tokenValue = analisarArquivo(file);
+                if (strcmp(tokenValue.tokenValor, "numero") != 0) {
+                    printf("Esperava-se um [NUMERO]!");
+                    sairErro(7, file);
+                }
+                
+                tokenValue = analisarArquivo(file);
+                if (strcmp(tokenValue.tokenValor, "virgula") != 0 && strcmp(tokenValue.tokenValor, "pontoevirgula") != 0) {
+                    printf("Esperava-se uma [VIRGULA] ou um [PONTO E VIRGULA]!");
+                    sairErro(7, file);
+                }
+            }
+        }
+        else {
+            printf("Esperava-se [LABEL], [TYPE], [VAR], [PROCEDURE] or [FUNCTION]!");
+            sairErro(6, file);
+        }
+    }
+    
+    // compilaComando(file, currentScope);
 }
 
 void sairErro(int codigo, FILE* file) {
@@ -271,10 +304,6 @@ bool isNumeric(char* word) {
     
     for (int i = 0; i < wordSize; i ++) {
         if (word[i] < '0' || word[i] > '9') {
-            if (i == 0 && (word[i] == '-' || word[i] == '+')) {
-                continue;
-            }
-            
             return false;
         }
     }
@@ -292,10 +321,6 @@ int getNumeric(char* word) {
         if (word[i] >= '0' && word[i] <= '9') {
             number += (int) (word[i] - '0');
         }
-    }
-    
-    if (word[0] == '-') {
-        number = -number;
     }
     
     return number;

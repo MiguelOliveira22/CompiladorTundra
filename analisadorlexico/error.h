@@ -2,9 +2,12 @@
 #define error
 
 typedef enum {
-    arquivoNaoReconhecido,
+    operacaoSucesso,
+    arquivoNaoPassado,
     arquivoNaoCarregado,
     
+    excedeuMaxLengthLexico,
+    tokenInexperado,
 } CodigoErro;
 
 void sairErro(FILE* file, int codigoErro, char* tipoErro);

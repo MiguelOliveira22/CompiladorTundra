@@ -48,16 +48,16 @@ typedef enum {
     invalido,
     eof,
     
-    null,
+    /*null,*/
     identificador,
     numero,
-} TipoToken;
+} CodigoToken;
 
 typedef struct {
-    TipoToken numeroToken;
-    char*     lexico;
-    bool      isBreak;
-    char*     tokenValor;
+    CodigoToken codigoToken;
+    char*       lexicoArquivo;
+    bool        isEspecial;
+    char*       nomeCompilador;
 } token;
 
 const token tokens[] = {
@@ -109,11 +109,12 @@ const token tokens[] = {
     { eof,             "",          false, "EOF"             }
 };
 
+token analex(FILE* file);
+void  anasin(FILE* file, int escopo);
+
 void compilaPrograma(FILE* file, int escopo);
 void compilaBloco(FILE* file, int escopo);
 
-token  analisarArquivo(FILE* file);
-token  getToken(char* palavra);
 bool   isIdentifier(char* word);
 bool   isNumeric(char* word);
 int    getNumeric(char* word);

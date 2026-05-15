@@ -1,7 +1,7 @@
-#ifndef analisadorlexico
+#ifndef analisadortools
+#define analisadortools
 
 #include "basics.h"
-#define analisadorlexico
 
 const i8 MAX_LENGTH_LEXICO = 36;
 
@@ -111,7 +111,6 @@ const token tokens[] = {
 
 void compilaPrograma(FILE* file, int escopo);
 void compilaBloco(FILE* file, int escopo);
-void sairErro(int codigo, FILE* file);
 
 token  analisarArquivo(FILE* file);
 token  getToken(char* palavra);

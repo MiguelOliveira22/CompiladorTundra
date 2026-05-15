@@ -1,5 +1,4 @@
 #ifndef symboltables
-
 #define symboltables
 
 typedef enum {

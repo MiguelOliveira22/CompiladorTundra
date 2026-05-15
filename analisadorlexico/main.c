@@ -3,7 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "analisadorlexico.h"
+#include "analisadortools.h"
+#include "error.h"
 
 // Main Function
 int main(int argc, char* argv[])
@@ -128,11 +129,6 @@ void compilaBloco(FILE* file, int escopo) {
     
     printf("Esperava-se %s", tokenValue.tokenValor);
     sairErro(6, file);
-}
-
-void sairErro(int codigo, FILE* file) {
-    fclose(file);
-    exit(codigo);
 }
 
 token analisarArquivo(FILE* file) {

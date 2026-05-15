@@ -1,5 +1,4 @@
 #ifndef arvorebinaria
-
 #define arvorebinaria
 
 typedef *void Elemento;

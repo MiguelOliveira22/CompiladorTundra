@@ -1,5 +1,4 @@
 #ifndef basics
-
 #define basics
 
 typedef unsigned char i8;

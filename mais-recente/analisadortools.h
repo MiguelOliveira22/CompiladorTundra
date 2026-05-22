@@ -65,11 +65,4 @@ extern const token tokens[];
 token analex(FILE* file);
 void  anasin(FILE* file, int escopo);
 
-void compilaPrograma(FILE* file, int escopo);
-void compilaBloco(FILE* file, int escopo);
-
-bool   isIdentifier(char* word);
-bool   isNumeric(char* word);
-int    getNumeric(char* word);
-
 #endif

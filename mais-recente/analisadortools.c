@@ -56,14 +56,17 @@ const token tokens[] = {
     { eof,             "",          false, "EOF"             }
 };
 
-int linha = 1;
-int coluna = 0;
-
-int linhaAtual = 1;
-int colunaAtual = 0;
-
 token analisarArquivo(FILE* file);
 token getToken(char* palavra);
+
+void compilaPrograma(FILE* file, int escopo);
+void compilaBloco(FILE* file, int escopo);
+void compilaParametrosFormais(FILE* file, int escopo);
+void compilaComandos(FILE* file, int escopo);
+
+bool isIdentifier(char* word);
+bool isNumeric(char* word);
+int getNumeric(char* word);
 
 token analex(FILE* file) {
     while (true) {
@@ -87,9 +90,6 @@ void anasin(FILE* file, int escopo) {
 token analisarArquivo(FILE* file) {
     char palavra[MAX_LENGTH_LEXICO];
     memset(palavra, '\0', MAX_LENGTH_LEXICO);
-    
-    linha = linhaAtual;
-    coluna = colunaAtual;
 
     while (!feof(file)) {
         i8 currentTamanho = strlen(palavra);
@@ -99,12 +99,6 @@ token analisarArquivo(FILE* file) {
         }
         
         palavra[currentTamanho] = getc(file);
-        colunaAtual ++;
-        
-        if (palavra[currentTamanho] == '\n') {
-            linhaAtual ++;
-            colunaAtual = 0;
-        }
         
         if (feof(file) || isspace(palavra[currentTamanho])) {
             palavra[currentTamanho] = '\0';
@@ -181,47 +175,47 @@ void compilaPrograma(FILE* file, int escopo)
 {
     token tokenValue;
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     if (tokenValue.codigoToken != programa) {
         sairErro(file, tokenInexperado, "Esperava-se um PROGRAM!");
     }
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     
     if (tokenValue.codigoToken != identificador) {
         sairErro(file, tokenInexperado, "Esperava-se um IDENTIFICADOR!");
     }
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     if (tokenValue.codigoToken != abreparenteses) {
         sairErro(file, tokenInexperado, "Esperava-se um abre parenteses!");
     }
     
     while (tokenValue.codigoToken != fechaparenteses) {
-        tokenValue = analisarArquivo(file);
+        tokenValue = analex(file);
         if (tokenValue.codigoToken != identificador) {
             sairErro(file, tokenInexperado, "Esperava-se um identificador!");
         }
         
-        tokenValue = analisarArquivo(file);
+        tokenValue = analex(file);
         if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != fechaparenteses) {
             sairErro(file, tokenInexperado, "Esperava-se um virgula ou um fecha parenteses!");
         }
     }
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     if (tokenValue.codigoToken != pontoevirgula) {
         sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula!");
     }
     
     compilaBloco(file, escopo + 1);
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     if (tokenValue.codigoToken != ponto) {
         sairErro(file, tokenInexperado, "Esperava-se um ponto final!");
     }
     
-    tokenValue = analisarArquivo(file);
+    tokenValue = analex(file);
     if (tokenValue.codigoToken != eof) {
         sairErro(file, tokenInexperado, "Esperava-se fim de arquivo!");
     }
@@ -233,16 +227,16 @@ void compilaBloco(FILE* file, int escopo) {
     token tokenValue;
     
     while (true) {
-        tokenValue = analisarArquivo(file);
+        tokenValue = analex(file);
         
         if (tokenValue.codigoToken == rotulo) {
             do {
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != numero) {
                     sairErro(file, tokenInexperado, "Esperava-se um número");
                 }
                 
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != pontoevirgula) {
                     sairErro(file, tokenInexperado, "Esperava-se virgula ou ponto e virgula");
                 }
@@ -254,23 +248,23 @@ void compilaBloco(FILE* file, int escopo) {
         
         if (tokenValue.codigoToken == tipo) {
             do {
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != identificador) {
                     sairErro(file, tokenInexperado, "Esperava-se um identificador");
                 }
                 
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != atribuicao) {
                     sairErro(file, tokenInexperado, "Esperava-se um simbolo de atribuicao");
                 }
                 
                 // Problema! Precisamos implementar tipos para a tabela de simbolos
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != identificador) {
                     sairErro(file, tokenInexperado, "Esperava-se um identificador");
                 }
                 
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != pontoevirgula) {
                     sairErro(file, tokenInexperado, "Esperava-se uma virgula ou ponto e virgula");
                 }
@@ -283,12 +277,12 @@ void compilaBloco(FILE* file, int escopo) {
         if (tokenValue.codigoToken == variavel) {
             do {
                 do {
-                    tokenValue = analisarArquivo(file);
+                    tokenValue = analex(file);
                     if (tokenValue.codigoToken != identificador) {
                         sairErro(file, tokenInexperado, "Esperava-se um identificador");
                     }
                     
-                    tokenValue = analisarArquivo(file);
+                    tokenValue = analex(file);
                     if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != doispontos) {
                         sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um dois pontos");
                     }
@@ -296,12 +290,12 @@ void compilaBloco(FILE* file, int escopo) {
                 while(tokenValue.codigoToken != doispontos);
                 
                 // Problema! Precisamos implementar tipos para a tabela de simbolos
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != identificador) {
                     sairErro(file, tokenInexperado, "Esperava-se um identificador");
                 }
                 
-                tokenValue = analisarArquivo(file);
+                tokenValue = analex(file);
                 if (tokenValue.codigoToken != pontoevirgula) {
                     sairErro(file, tokenInexperado, "Esperava-se um pontoevirgula");
                 }
@@ -312,19 +306,181 @@ void compilaBloco(FILE* file, int escopo) {
         }
         
         if (tokenValue.codigoToken == procedimento) {
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != identificador) {
+                sairErro(file, tokenInexperado, "Esperava-se um identificador");
+            }
+            
+            compilaParametrosFormais(file, escopo);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula");
+            }
+            
+            compilaBloco(file, escopo + 1);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula");
+            }
+            
             continue;
         }
         
         if (tokenValue.codigoToken == funcao) {
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != identificador) {
+                sairErro(file, tokenInexperado, "Esperava-se um identificador");
+            }
+            
+            compilaParametrosFormais(file, escopo);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != doispontos) {
+                sairErro(file, tokenInexperado, "Esperava-se um dois pontos");
+            }
+            
+            // Problema! Precisamos implementar tipos para a tabela de simbolos
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != identificador) {
+                sairErro(file, tokenInexperado, "Esperava-se um identificador");
+            }
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula");
+            }
+            
+            compilaBloco(file, escopo + 1);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula");
+            }
+            
             continue;
         }
         
         if (tokenValue.codigoToken == inicio) {
+            compilaComandos(file, escopo);
+            
             return;
         }
         
         sairErro(file, tokenInexperado, "OI");
     }
+}
+
+void compilaParametrosFormais(FILE* file, int escopo) {
+    token tokenValue;
+    
+    tokenValue = analex(file);
+    if (tokenValue.codigoToken != abreparenteses) {
+        sairErro(file, tokenInexperado, "Esperava-se um abre parenteses");
+    }
+    
+    while (true) {
+        tokenValue = analex(file);
+        
+        if (tokenValue.codigoToken == variavel || tokenValue.codigoToken == identificador) {
+            if (tokenValue.codigoToken != identificador) {
+                tokenValue = analex(file);
+            }
+            
+            do {
+                if (tokenValue.codigoToken != identificador) {
+                    sairErro(file, tokenInexperado, "Esperava-se um [ID]");
+                }
+                
+                tokenValue = analex(file);
+                if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != doispontos) {
+                    sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um dois pontos");
+                }
+            }
+            while(tokenValue.codigoToken != doispontos);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != identificador) {
+                sairErro(file, tokenInexperado, "Esperava-se um [ID]");
+            }
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula && tokenValue.codigoToken != fechaparenteses) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula ou um fecha parenteses");
+            }
+            
+            if (tokenValue.codigoToken == pontoevirgula) {
+                continue;
+            }
+        }
+        
+        if (tokenValue.codigoToken == funcao) {
+            do {
+                tokenValue = analex(file);
+                if (tokenValue.codigoToken != identificador) {
+                    sairErro(file, tokenInexperado, "Esperava-se um [ID]");
+                }
+                
+                tokenValue = analex(file);
+                if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != doispontos) {
+                    sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um dois pontos");
+                }
+            }
+            while(tokenValue.codigoToken != doispontos);
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != identificador) {
+                sairErro(file, tokenInexperado, "Esperava-se um [ID]");
+            }
+            
+            tokenValue = analex(file);
+            if (tokenValue.codigoToken != pontoevirgula && tokenValue.codigoToken != fechaparenteses) {
+                sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula ou um fecha parenteses");
+            }
+            
+            if (tokenValue.codigoToken == pontoevirgula) {
+                continue;
+            }
+        }
+        
+        if (tokenValue.codigoToken == procedimento) {
+            do {
+                tokenValue = analex(file);
+                if (tokenValue.codigoToken != identificador) {
+                    sairErro(file, tokenInexperado, "Esperava-se um [ID]");
+                }
+                
+                tokenValue = analex(file);
+                if (tokenValue.codigoToken != virgula &&
+                    tokenValue.codigoToken != pontoevirgula && 
+                    tokenValue.codigoToken != fechaparenteses)
+                {
+                    sairErro(file, tokenInexperado, "Esperava-se um ponto e virgula ou um fecha parenteses");
+                }
+            }
+            while(tokenValue.codigoToken != pontoevirgula && tokenValue.codigoToken != fechaparenteses);
+            
+            if (tokenValue.codigoToken == pontoevirgula) {
+                continue;
+            }
+        }
+        
+        if (tokenValue.codigoToken == fechaparenteses) {
+            return;
+        }
+        
+        sairErro(file, tokenInexperado, "Esperava-se [VAR], [FUNC], [PROC] ou [ID]");
+    }
+}
+
+void compilaComandos(FILE* file, int escopo) {
+    token tokenValue;
+    
+    do {
+        
+    }
+    while(tokenValue.codigoToken != fim);
 }
 
 bool isIdentifier(char* word) {

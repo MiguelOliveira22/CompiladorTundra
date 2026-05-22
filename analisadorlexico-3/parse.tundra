@@ -1,0 +1,13 @@
+program mainMedico(nomeCompleto,idade,genero,sexo);
+
+    label 1, 2;
+    
+    type tipo := top;
+    type tap := tep;
+    
+    var thomas, jonas, kimberly: integer;
+
+    function jamesgun();
+        var commandPrompt := 1 and 2;
+        var ra := [24129, 24143, 24528, 24609]
+    .

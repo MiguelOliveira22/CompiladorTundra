@@ -13,7 +13,7 @@ void sairErro(FILE* file, int codigoErro, char* tipoErro) {
     printCurrentFilePosition(file);
     
     fclose(file);
-    printf(tipoErro);
+    printf("%s", tipoErro);
     
     exit(codigoErro);
 }

@@ -6,7 +6,8 @@
 #include "error.h"
 #include "basics.h"
 
-const i8 MAX_LENGTH_LEXICO = 36;
+#define MAX_LENGTH_LEXICO 36
+
 const token tokens[] = {
     { programa,        "program",   false, "programa"        },
     { rotulo,          "label",     false, "rotulo"          },
@@ -626,24 +627,22 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
     if (tokenValue.codigoToken == se) {
         compilaExpressao(file, escopo);
         
-        tokenValue = analex(file, true);
+        tokenValue = analex(file, false);
         
         if (tokenValue.codigoToken != entao) {
             sairErro(file, tokenInexperado, "Esperava-se entao");
         }
-        
+
         tokenValue = analex(file, true);
-        
         compilaComandoSemRotulo(file, escopo);
         
         tokenValue = analex(file, false);
-        
-        analex(file, true);
-        
+
         if (tokenValue.codigoToken != senao) {
             return;
         }
-        
+
+        analex(file, true);
         compilaComandoSemRotulo(file, escopo);
         
         return;
@@ -657,6 +656,8 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         if (tokenValue.codigoToken != faca) {
             sairErro(file, tokenInexperado, "Esperava-se faca");
         }
+
+        analex(file, true);
         
         compilaComandoSemRotulo(file, escopo);
         
@@ -671,7 +672,7 @@ void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
     
     compilaExpressaoSimples(file, escopo);
     
-    tokenValue = analex(file, true);
+    tokenValue = analex(file, false);
     
     if (
         tokenValue.codigoToken == igual ||
@@ -682,7 +683,6 @@ void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
         tokenValue.codigoToken == menor
     ) {
         compilaExpressaoSimples(file, escopo);
-        analex(file, true);
     }
     
     return;
@@ -758,7 +758,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
                     sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um fechacolchetes");
                 }
             }
-            while(tokenValue.codigoToken == fechaparenteses);
+            while(tokenValue.codigoToken == virgula);
             
             analex(file, true);
             return;
@@ -774,7 +774,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
                     sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um fechacolchetes");
                 }
             }
-            while(tokenValue.codigoToken == fechacolchetes);
+            while(tokenValue.codigoToken == virgula);
             
             analex(file, true);
             return;

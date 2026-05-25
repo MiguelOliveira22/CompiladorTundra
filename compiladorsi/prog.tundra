@@ -29,7 +29,7 @@ program exemplo12(input,output);
             read(y); p(y); write(y)
         end (* q *);
 
-    begin q end (* r *)
+    begin q end (* r *);
 
 begin
     read(x);

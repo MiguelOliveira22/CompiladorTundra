@@ -1,0 +1,37 @@
+program exemplo12(input,output);
+    var x: integer; y: bool; caceta: null;
+    type x = integer; banana = bool; pao = null;
+
+    procedure p(var t: integer); (* 1 *)
+        label 100,200; (* 2 *)
+        var s: integer;
+        
+        function f(z: integer): integer; (* 2 *)
+        begin
+            if z<0 
+            then goto 200
+            else
+                if z=0 then f:=2
+                       else f:=f(z-2)*z+1
+        end (* f *);
+
+    begin
+        100: s:=f(t); t:=s;
+             if t<x then goto 100;
+        200: x:=x-1
+    end (* p *);
+
+    procedure r; (* 1 *)
+        
+        procedure q; (* 2 *)
+            var y: integer; (* 3 *)
+        begin
+            read(y); p(y); write(y)
+        end (* q *);
+
+    begin q end (* r *);
+
+begin
+    read(x);
+    r
+end.

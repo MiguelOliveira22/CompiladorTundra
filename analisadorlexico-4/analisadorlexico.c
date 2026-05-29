@@ -26,8 +26,6 @@ token returnedToken;
 
 token analex(FILE* file, bool updateToken) {
     if (!updateToken) {
-        printf("%02d - %s\n", returnedToken.codigoToken, returnedToken.nomeCompilador);
-        
         return returnedToken;
     }
     
@@ -49,8 +47,6 @@ token analex(FILE* file, bool updateToken) {
             
             linhaProximo = linhaAtual;
             colunaProximo = colunaAtual;
-            
-            printf("%02d - %s\n", returnedToken.codigoToken, returnedToken.nomeCompilador);
             
             return returnedToken;
         }

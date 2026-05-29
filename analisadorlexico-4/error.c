@@ -19,5 +19,6 @@ void sairErro(FILE* file, int codigoErro, char* tipoErro) {
 }
 
 void printCurrentFilePosition(FILE* file) {
+    
     printf("(%d, %d)\n\n", linha, coluna);
 }

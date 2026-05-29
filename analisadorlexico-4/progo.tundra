@@ -1,7 +1,7 @@
 program exemplo12(input,output);
     var x: integer; y: bool; caceta: null;
     type x = integer; banana = bool; pao = null;
-
+    
     procedure p(var t: integer); (* 1 *)
         label 100,200; (* 2 *)
         var s: integer;

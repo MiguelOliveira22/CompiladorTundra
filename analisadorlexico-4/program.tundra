@@ -1,0 +1,47 @@
+program programMain (input, output);
+
+    label 100, 200, 300, 400;
+    var i, j: integer; ask, bask: boolean;
+    type jonas = integer; pratt = boolean; parrea = nullable;
+    
+    function matchLast(var i, j: integer; procedure p, q; function a, b: integer): integer;
+    
+    begin
+        100:
+        if i > j
+        then while i > j do i := i - 1
+        else while i < j do i := i + 1;
+        
+        goto 100
+    end (* matchLast *);
+    
+    procedure explodeLast(var t, y, l, q: integer);
+    
+    begin
+        200: y := 13;
+        300: l := 14;
+        
+        q[i, j, q, w] := 12 + 2 - 5 * 3 or 8 + 3;
+        
+        matchLast(y, l);
+        
+        if i = 0 then i := not (i + 1 and (2 + 1) / 2)
+    end (* explodeLast *);
+    
+    function a: integer;
+    
+    begin
+        400: a;
+        goto 400
+    end (* a *);
+    
+    procedure b;
+    
+    begin
+        500: b;
+        goto 500
+    end (* b *);
+
+begin
+    pr(i, j)
+end.

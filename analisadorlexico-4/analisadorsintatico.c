@@ -143,6 +143,10 @@ void compilaBloco(FILE* file, int escopo) {
                     if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != doispontos) {
                         sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um dois pontos");
                     }
+                    
+                    if (tokenValue.codigoToken == virgula) {
+                        analex(file, true);
+                    }
                 }
                 while(tokenValue.codigoToken != doispontos);
                 
@@ -256,7 +260,7 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
         tokenValue = analex(file, true);
         
         if (tokenValue.codigoToken == variavel || tokenValue.codigoToken == identificador) {
-            if (tokenValue.codigoToken != identificador) {
+            if (tokenValue.codigoToken == variavel) {
                 tokenValue = analex(file, true);
             }
             
@@ -268,6 +272,10 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
                 tokenValue = analex(file, true);
                 if (tokenValue.codigoToken != virgula && tokenValue.codigoToken != doispontos) {
                     sairErro(file, tokenInexperado, "Esperava-se uma virgula ou um dois pontos");
+                }
+                
+                if (tokenValue.codigoToken == virgula) {
+                    tokenValue = analex(file, true);
                 }
             }
             while(tokenValue.codigoToken != doispontos);
@@ -611,6 +619,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
     }
     
     if (tokenValue.codigoToken == nao) {
+        analex(file, true);
         compilaFator(file, escopo); // Sneaky
         
         return;

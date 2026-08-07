@@ -201,3 +201,18 @@ int getNumeric(char* word) {
     
     return number;
 }
+
+/**
+Uso incorreto de feof() e retorno do getc():
+A função feof() só retorna verdadeiro após uma tentativa de leitura falhar. Ao fazer palavra[currentTamanho] = getc(file);, o valor retornado (int) é gravado direto no array de char. Quando atinge o EOF, o valor de controle EOF (-1) é salvo na string como se fosse um caractere válido antes do feof() ser checado, podendo gerar loops infinitos ou tokens corrompidos.
+
+Desincronização de colunaAtual:
+Ao executar ungetc(), o ponteiro do arquivo volta um caractere, mas colunaAtual não é decrementada.
+Dentro do tratamento de caracteres especiais em analisarArquivo, existe uma segunda chamada a getc(file) para checar tokens compostos (ex: <=), porém colunaAtual não é incrementada nessa leitura nem checada para quebras de linha (\n).
+
+Limitação de tokens especiais compostos:
+A lógica no bloco else assume apenas tokens especiais de no máximo 2 caracteres. Se a linguagem contiver operadores de 3 caracteres (como >>> ou ...), a leitura adiantada não funcionará corretamente.
+
+Sugestão de Correção para a Leitura Base (analisarArquivo)
+Para tratar o fluxo de leitura de forma segura e controlar linhas/colunas adequadamente, capture o caractere em uma variável int antes de atribuí-lo ao buffer:
+ */

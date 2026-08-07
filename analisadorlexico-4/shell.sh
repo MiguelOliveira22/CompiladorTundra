@@ -1,0 +1,1 @@
+make -f run.mk run

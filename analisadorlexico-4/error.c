@@ -7,18 +7,19 @@
 extern int linha;
 extern int coluna;
 
-void printCurrentFilePosition(FILE* file);
+void printFileTrace(FILE* file);
 
 void sairErro(FILE* file, int codigoErro, char* tipoErro) {
-    printCurrentFilePosition(file);
+    if (codigoErro != operacaoSucesso) {
+        printFileTrace(file);
+    }
     
     fclose(file);
-    printf("%s\n", tipoErro);
     
+    printf("%s\n", tipoErro);
     exit(codigoErro);
 }
 
-void printCurrentFilePosition(FILE* file) {
-    
+void printFileTrace(FILE* file) {
     printf("(%d, %d)\n\n", linha, coluna);
 }

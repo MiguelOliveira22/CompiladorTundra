@@ -12,5 +12,6 @@ typedef enum {
 } CodigoErro;
 
 void sairErro(FILE* file, int codigoErro, char* tipoErro);
+void printWarning(int codigoWarning, char* tipoWarning);
 
 #endif

@@ -23,3 +23,7 @@ void sairErro(FILE* file, int codigoErro, char* tipoErro) {
 void printFileTrace(FILE* file) {
     printf("(%d, %d)\n\n", linha, coluna);
 }
+
+void printWarning(int codigoWarning, char* tipoWarning) {
+    printf("Warning %d: %s\n", codigoWarning, tipoWarning);
+}

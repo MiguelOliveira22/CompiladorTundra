@@ -10,8 +10,13 @@ typedef enum {
     ERROR_FILE_NO_PROGRAM_FILES,
     ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED,
 
-    
+
 } ErrorTipos;
+
+typedef struct {
+    int linha;
+    int coluna;
+} ErrorPosition;
 
 int sairErroTerminal(ErrorTipos erro, string message, Lista* filesToClose);
 

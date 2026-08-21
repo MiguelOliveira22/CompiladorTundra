@@ -65,11 +65,45 @@ bool inserirNovoElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
 
     return true;
 }
-
-// TODO
 bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
+    NoLista* atual = listaParaRemover->inicio;
+    NoLista* anterior = NULL;
 
+    while (atual != NULL) {
+        if ((listaParaRemover->comparar) (removerElemento, atual) == 0) {
+            if (anterior == NULL) {
+                listaParaRemover->inicio = atual->prox;
+            }
+            else {
+                anterior->prox = atual->prox;
+            }
+
+            if (listaParaRemover->destruir != NULL) {
+                (listaParaRemover->destruir) (atual->info);
+            }
+            free(atual);
+
+            listaParaRemover->count --;
+
+            return true;
+        }
+
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    return false;
 }
 Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento) {
+    NoLista* atual = listaParaBuscar->inicio;
 
+    while (atual != NULL) {
+        if ((listaParaBuscar->comparar) (buscarElemento, atual->info) == 0) {
+            return atual->info;
+        }
+
+        atual = atual->prox;
+    }
+
+    return NULL;
 }

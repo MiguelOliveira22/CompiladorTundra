@@ -65,6 +65,8 @@ bool inserirNovoElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
 
     return true;
 }
+
+// TODO
 bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
 
 }

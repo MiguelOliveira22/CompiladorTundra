@@ -1,7 +1,10 @@
 #ifndef tokenlexico
 #define tokenlexico
 
-enum TokenTipo {
+#include "basics/basics.h"
+#include "basics/lista.h"
+
+typedef enum {
     TOKEN_KEYW_PROGRAMA,
     TOKEN_KEYW_ROTULO,
     TOKEN_KEYW_TIPO,
@@ -42,18 +45,18 @@ enum TokenTipo {
     TOKEN_SYMB_ABRECOMENTARIO,
     TOKEN_SYMB_FECHACOMENTARIO,
     
-    invalido,
-    eof,
-    
-    null,
-    identificador,
-    numero,
-};
+    TOKEN_OPER_INVALIDO,
+    TOKEN_OPER_EOF,
+
+    TOKEN_OPER_IDENTIFICADOR,
+} TokenTipo;
 
 typedef struct {
+    TokenTipo codigo;
     string identificador;
+    bool tokenEspecial;
 } Token;
 
-extern Token* 
+extern Token tokenDefinitions[TOKEN_OPER_EOF + 1];
 
 #endif

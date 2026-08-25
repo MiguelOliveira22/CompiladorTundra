@@ -10,7 +10,7 @@ typedef enum {
     ERROR_FILE_NO_PROGRAM_FILES,
     ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED,
 
-
+    ERROR_INSUFFICIENT_MEMORY_MALLOC,
 } ErrorTipos;
 
 typedef struct {

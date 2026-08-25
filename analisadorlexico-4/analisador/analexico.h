@@ -6,7 +6,9 @@
 #include "basics/error.h"
 #include "analisador/tokenlexico.h"
 
-Token* analisarReadPast();
-Token* analisarReadOnly();
+const int CAP_SIZE_IDENTIFIER = 36 * sizeof(char);
+
+Token* analisarReadClear();
+Token* analisarReadCopy();
 
 #endif

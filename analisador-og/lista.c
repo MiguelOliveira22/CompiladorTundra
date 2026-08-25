@@ -51,7 +51,7 @@ bool inserirElementoLista(Lista* listaOpera, Elemento novoElemento) {
             return false;
         }
 
-        anterior = listaOpera->atual;
+        anterior = listaOper a->atual;
         listaOpera->atual = listaOpera->atual->prox;
     }
 

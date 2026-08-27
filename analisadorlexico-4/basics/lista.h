@@ -3,8 +3,6 @@
 
 #include "basics/basics.h"
 
-typedef void* Elemento;
-
 typedef struct NoLista {
     Elemento info;
     struct NoLista* prox;

@@ -9,4 +9,6 @@ typedef enum {
 
 typedef char* string;
 
+typedef void* Elemento;
+
 #endif

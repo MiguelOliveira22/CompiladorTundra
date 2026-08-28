@@ -14,6 +14,9 @@ ErrorPosition currentPosition;
 ErrorPosition filePosition;
 
 void readNextToken(FILE* currentFile) {
+    currentPosition.linha = filePosition.linha;
+    currentPosition.coluna = filePosition.coluna;
+
     string currentIdentifier = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
     if (currentIdentifier != NULL) {
         memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
@@ -33,48 +36,38 @@ void readNextToken(FILE* currentFile) {
     {
         currentCharacter = (char) fgetc(currentFile);
         if (currentCharacter == EOF || isspace(currentCharacter)) {
-            // getToken
+            storedToken = &;
             return;
         }
         else {
-            bool foundToken = false;
-            for (int i = 0; i < && !foundToken; i++) {
-                i8 identifierSize = strlen();
-                
-                if (strncmp() == 0 && .special) {
+            string currentSpecialToken = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
 
+            Token* currentSpecial = NULL;
+            int currentSpecialSize = 0;
+
+            if (currentIdentifier == NULL) {
+                sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial", currentFile);
+                return;
+            }
+
+            for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i++) {
+                memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
+                fgets(currentSpecialToken, strlen(tokenDefinitions[i].identificador), currentFile);
+                
+                if (strcmp(currentSpecialToken, tokenDefinitions[i].identificador) == 0 && tokenDefinitions[i].tokenEspecial) {
+                    if (strlen(tokenDefinitions[i].identificador) > currentSpecialSize) {
+                        currentSpecial = &tokenDefinitions[i];
+                        currentSpecialSize = strlen(tokenDefinitions[i].identificador);
+                    }
                 }
+            }
+
+            if (currentSpecial != NULL) {
+                storedToken = &;
             }
 
             return;
         }
-        else {
-            for (int i = 0; i < sizeof(tokens) / sizeof(token); i ++) {
-                token currentToken = tokens[i];
-                
-                if (palavra[currentTamanho] == currentToken.lexicoArquivo[0] && currentToken.isEspecial) {
-                    if (currentTamanho > 0) {
-                        ungetc(palavra[currentTamanho], file);
-                        palavra[currentTamanho] = '\0';
-                        
-                        return getToken(palavra);
-                    }
-                    else {
-                        palavra[currentTamanho + 1] = getc(file);
-                        palavra[currentTamanho + 2] = '\0';
-                        
-                        token partialToken = getToken(palavra);
-                        
-                        if (partialToken.codigoToken == invalido) {
-                            ungetc(palavra[currentTamanho + 1], file);
-                            palavra[currentTamanho + 1] = '\0';
-                            
-                            partialToken = getToken(palavra);
-                        }
-                        
-                        return partialToken;
-                    }
-                }
 
         if (currentCharacter == '\n') {
             filePosition.linha = 0;
@@ -85,7 +78,7 @@ void readNextToken(FILE* currentFile) {
         }
 
         if (strlen(currentIdentifier) + 1 < CAP_SIZE_IDENTIFIER) {
-            strcat(currentIdentifier, currentCharacter);
+            strcat(currentIdentifier, &currentCharacter);
         }
         else {
             sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)", currentFile);
@@ -97,3 +90,7 @@ void readNextToken(FILE* currentFile) {
 Token* getCurrentToken() {
     return storedToken;
 }
+
+// const type& nome; -> só pra ler com const, pq n copia e n altera (acessa por algo similar a deferencia)
+// type* nome; -> por referencia, o ponto é a cessar diretamente, ent não alterar é bobo
+// type nome; -> por valor copia, ent n precisa se preocupar com alterar

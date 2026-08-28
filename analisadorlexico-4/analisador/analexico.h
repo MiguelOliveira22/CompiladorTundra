@@ -8,7 +8,7 @@
 
 const int CAP_SIZE_IDENTIFIER = 36 * sizeof(char);
 
-Token* analisarReadClear();
-Token* analisarReadCopy();
+void   readNextToken(FILE* currentFile);
+Token* getCurrentToken();
 
 #endif

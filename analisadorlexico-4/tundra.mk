@@ -1,2 +1,5 @@
 run:
-	gcc main.c error.c analisadortools.c analisadorsintatico.c analisadorlexico.c -o ./tundra -std=c99
+	gcc main.c basics/basics.c basics/error.c basics/lista.c basics/hashtable.c \
+	analisador/analexico.c analisador/anasintatico.c \
+	analisador/symboltable.c analisador/tokenlexico.c \
+	-o ./tundra -std=c99

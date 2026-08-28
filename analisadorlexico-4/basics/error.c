@@ -4,11 +4,10 @@
 #include "basics/error.h"
 #include "basics/lista.h"
 
-int sairErroTerminal(ErrorTipos erro, string message, Lista* filesToClose)
+void sairErroTerminal(ErrorTipos erro, string message, FILE* fileToClose)
 {
-    if (filesToClose != NULL) {
-        destruirLista(filesToClose);
-        free(filesToClose);
+    if (fileToClose != NULL) {
+        fclose(fileToClose);
     }
 
     if (strlen(message) > 0) {
@@ -18,5 +17,5 @@ int sairErroTerminal(ErrorTipos erro, string message, Lista* filesToClose)
         printf("Erro %d - Encerrando Execução");
     }
 
-    return erro;
+    exit(erro);
 }

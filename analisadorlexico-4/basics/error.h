@@ -11,6 +11,8 @@ typedef enum {
     ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED,
 
     ERROR_INSUFFICIENT_MEMORY_MALLOC,
+    ERROR_EXCEEDED_IDENTIFIER_SIZE,
+    
 } ErrorTipos;
 
 typedef struct {
@@ -18,6 +20,6 @@ typedef struct {
     int coluna;
 } ErrorPosition;
 
-int sairErroTerminal(ErrorTipos erro, string message, Lista* filesToClose);
+void sairErroTerminal(ErrorTipos erro, string message, FILE* fileToClose);
 
 #endif

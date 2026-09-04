@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "analisador/symboltable.h"
-#include "analisador/tokenlexico.h"
-#include "basics/basics.h"
+#include "symboltable.h"
+#include "tokenlexico.h"
+#include "basics.h"
 
 Token symbolTiposDefinition[] = {
     { TYPE_BASE_NULL,            "null",    false },

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "analisador/tokenlexico.h"
-#include "basics/basics.h"
+#include "tokenlexico.h"
+#include "basics.h"
 
 Token tokenDefinitions[] = {
     { TOKEN_KEYW_PROGRAMA,        "program",   false },

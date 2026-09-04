@@ -1,7 +1,7 @@
 #ifndef hashtable
 #define hashtable
 
-#include "basics/basics.h"
+#include "basics.h"
 
 typedef struct {
     Elemento* conteudo;

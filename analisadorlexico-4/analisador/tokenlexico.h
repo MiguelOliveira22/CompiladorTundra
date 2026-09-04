@@ -1,8 +1,8 @@
 #ifndef tokenlexico
 #define tokenlexico
 
-#include "basics/basics.h"
-#include "basics/lista.h"
+#include "basics.h"
+#include "lista.h"
 
 typedef enum {
     TOKEN_KEYW_PROGRAMA,

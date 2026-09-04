@@ -3,9 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "basics/basics.h"
-#include "basics/error.h"
-#include "analisador/tokenlexico.h"
+#include "basics.h"
+#include "error.h"
+#include "tokenlexico.h"
 #include "analexico.h"
 
 Token* storedToken = NULL;

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "basics/error.h"
-#include "basics/lista.h"
+#include "error.h"
+#include "lista.h"
 
 void sairErroTerminal(ErrorTipos erro, string message, FILE* fileToClose)
 {

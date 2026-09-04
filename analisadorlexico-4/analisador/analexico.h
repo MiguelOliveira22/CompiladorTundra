@@ -1,10 +1,10 @@
 #ifndef analexico
 #define analexico
 
-#include "basics/basics.h"
-#include "basics/lista.h"
-#include "basics/error.h"
-#include "analisador/tokenlexico.h"
+#include "basics.h"
+#include "lista.h"
+#include "error.h"
+#include "tokenlexico.h"
 
 const int CAP_SIZE_IDENTIFIER = 36 * sizeof(char);
 

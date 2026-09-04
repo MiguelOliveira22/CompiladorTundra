@@ -1,8 +1,8 @@
 #ifndef symboltable
 #define symboltable
 
-#include "analisador/tokenlexico.h"
-#include "basics/basics.h"
+#include "tokenlexico.h"
+#include "basics.h"
 
 typedef enum {
     TYPE_BASE_NULL,

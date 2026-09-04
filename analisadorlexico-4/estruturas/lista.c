@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "basics/lista.h"
+#include "lista.h"
 
 /*
  * C -> Função para comparar elementos.

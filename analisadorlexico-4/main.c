@@ -2,11 +2,15 @@
 
 #include "basics/error.h"
 #include "analisador/analexico.h"
+#include "estruturas/lista.h"
 
 int main(int argc, char** argv) {
     if (argc <= 1) {
         sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "Nenhum Arquivo Incluido Para Compilar", NULL);
     }
+
+    // Adicionar tabela de symbols para a base para referenciar
+
 
     for (int i = 1; i < argc; i ++) {
         FILE* arquivoParaCompilar = fopen(argv[i], "r");

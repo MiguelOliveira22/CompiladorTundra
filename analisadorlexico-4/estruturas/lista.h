@@ -1,7 +1,7 @@
 #ifndef lista
 #define lista
 
-#include "basics/basics.h"
+#include "basics.h"
 
 typedef struct NoLista {
     Elemento info;

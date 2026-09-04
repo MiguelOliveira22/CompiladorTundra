@@ -1,8 +1,8 @@
 #ifndef error
 #define error
 
-#include "basics/basics.h"
-#include "basics/lista.h"
+#include "basics.h"
+#include "lista.h"
 
 typedef enum {
     ERROR_OK_OPERATION_SUCCESS,

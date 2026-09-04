@@ -90,7 +90,3 @@ void readNextToken(FILE* currentFile) {
 Token* getCurrentToken() {
     return storedToken;
 }
-
-// const type& nome; -> só pra ler com const, pq n copia e n altera (acessa por algo similar a deferencia)
-// type* nome; -> por referencia, o ponto é a cessar diretamente, ent não alterar é bobo
-// type nome; -> por valor copia, ent n precisa se preocupar com alterar

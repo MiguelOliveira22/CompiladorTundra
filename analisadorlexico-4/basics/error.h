@@ -13,6 +13,9 @@ typedef enum {
     ERROR_INSUFFICIENT_MEMORY_MALLOC,
     ERROR_EXCEEDED_IDENTIFIER_SIZE,
     
+
+    ERROR_UNKNOWN_TOKEN,
+    ERROR_INVALID_TOKEN,
 } ErrorTipos;
 
 typedef struct {

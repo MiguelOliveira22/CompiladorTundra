@@ -92,7 +92,7 @@ void readNextToken(FILE* currentFile) {
     currentPosition.coluna = filePosition.coluna;
 
     string currentIdentifier = (string) malloc(CAP_SIZE_IDENTIFIER);
-    associarPonteirosParaErros(currentIdentifier);
+    associarPonteirosParaErros(currentIdentifier, NULL);        // Alterar nulo depois eu acho
 
     if (currentIdentifier != NULL) {
         memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
@@ -144,18 +144,29 @@ void readNextToken(FILE* currentFile) {
         else {
             for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i++) {
                 memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
+                /*
                 fgets(currentSpecialToken, strlen(tokenDefinitions[i].identificador), currentFile);
-                
                 if (strcmp(currentSpecialToken, tokenDefinitions[i].identificador) == 0 && tokenDefinitions[i].tokenEspecial) {
                     if (strlen(tokenDefinitions[i].identificador) > currentSpecialSize) {
-                        currentSpecial = &tokenDefinitions[i];
-                        currentSpecialSize = strlen(tokenDefinitions[i].identificador);
+                */
+                fgets(currentIdentifier, strlen(tokenDefinitions[i].identificador), currentFile);
+                if (strcmp(currentIdentifier, tokenDefinitions[i].identificador) == 0 && tokenDefinitions[i].tokenEspecial) {
+                    if (strlen(tokenDefinitions[i].identificador) > strlen(currentIdentifier)) {
+                        foundToken = &tokenDefinitions[i];
+                        //currentSpecial = &tokenDefinitions[i];
+                        //currentSpecialSize = strlen(tokenDefinitions[i].identificador);
                     }
                 }
             }
 
-            if (foundToken == NULL) {
-                strcat(currentIdentifier, &currentCharacter);
+            if (foundToken != NULL) {
+                storedToken = foundToken;
+                return;
+                //strcat(currentIdentifier, &currentCharacter);
+            }
+            else{
+                storedToken = &tokenInvalido;
+                return;
             }
         }
 

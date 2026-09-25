@@ -26,7 +26,7 @@ static void destruirPonteiros() {
     destruirLista(ponteirosParaDestruir);
 }
 
-void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
+void associarPonteirosParaErros(Elemento* ponteiro, void (*d) (Elemento a)) {
     if (ponteirosParaDestruir == NULL) {
         construirLista(ponteirosParaDestruir, NULL, NULL, NULL);
     }

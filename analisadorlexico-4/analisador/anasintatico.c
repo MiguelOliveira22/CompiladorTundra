@@ -85,102 +85,102 @@ void compilaBloco(FILE* file, int escopo) {
         if (tokenValue->codigo == TOKEN_KEYW_ROTULO) {
             do {
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != numero) {
+                if (tokenValue->codigo != TOKEN_OPER_NUMERO) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um número");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != virgula && tokenValue->codigo != pontoevirgula) {
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se virgula ou ponto e virgula");
                 }
             }
-            while(tokenValue->codigo != pontoevirgula);
+            while(tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA);
             
             getNextToken(file);
             
             continue;
         }
         
-        if (tokenValue->codigo == tipo) {
+        if (tokenValue->codigo == TOKEN_KEYW_TIPO) {
             tokenValue = getNextToken(file); // Pega o primeiro identificador
             
             do {
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != igual) {
+                if (tokenValue->codigo != TOKEN_SYMB_IGUAL) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um igual");
                 }
                 
                 // Problema! Precisamos implementar tipos para a tabela de simbolos
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != pontoevirgula) {
+                if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um pontoevirgula");
                 }
                 
                 tokenValue = getNextToken(file); // Sneakar o identificador
             }
-            while(tokenValue->codigo == identificador);
+            while(tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR);
             
             continue;
         }
         
-        if (tokenValue->codigo == variavel) {   // Arrumar a virgula
+        if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {   // Arrumar a virgula
             getNextToken(file);
             do {
                 do {
                     tokenValue = readCurrentToken();
                     
-                    if (tokenValue->codigo != identificador) {
+                    if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                     }
                     
                     tokenValue = getNextToken(file);
-                    if (tokenValue->codigo != virgula && tokenValue->codigo != doispontos) {
+                    if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um dois pontos");
                     }
                     
-                    if (tokenValue->codigo == virgula) {
+                    if (tokenValue->codigo == TOKEN_SYMB_VIRGULA) {
                         getNextToken(file);
                     }
                 }
-                while(tokenValue->codigo != doispontos);
+                while(tokenValue->codigo != TOKEN_SYMB_DOISPONTOS);
                 
                 // Problema! Precisamos implementar tipos para a tabela de simbolos
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != pontoevirgula) {
+                if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um pontoevirgula");
                 }
                 
                 tokenValue = getNextToken(file); // Sneakar o identificador
             }
-            while(tokenValue->codigo == identificador);
+            while(tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR);
             
             continue;
         }
         
-        if (tokenValue->codigo == procedimento) {
+        if (tokenValue->codigo == TOKEN_KEYW_PROCEDIMENTO) {
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != identificador) {
+            if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
             
             compilaParametrosFormais(file, escopo);
             
             tokenValue = readCurrentToken(); // Pega o Sneaky
-            if (tokenValue->codigo != pontoevirgula) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um pontoevirgula");
             }
             
@@ -188,7 +188,7 @@ void compilaBloco(FILE* file, int escopo) {
             compilaBloco(file, escopo + 1);
             
             tokenValue = readCurrentToken(); // Pega o Sneaky
-            if (tokenValue->codigo != pontoevirgula) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula");
             }
             
@@ -197,27 +197,27 @@ void compilaBloco(FILE* file, int escopo) {
             continue;
         }
         
-        if (tokenValue->codigo == funcao) {
+        if (tokenValue->codigo == TOKEN_KEYW_FUNCAO) {
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != identificador) {
+            if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
             
             compilaParametrosFormais(file, escopo);
             
             tokenValue = readCurrentToken(); // Pega o doispontos
-            if (tokenValue->codigo != doispontos) {
+            if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um doispontos");
             }
             
             // Problema! Precisamos implementar tipos para a tabela de simbolos
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != identificador) {
+            if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
             
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != pontoevirgula) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula");
             }
             
@@ -225,7 +225,7 @@ void compilaBloco(FILE* file, int escopo) {
             compilaBloco(file, escopo + 1);
             
             tokenValue = readCurrentToken(); // Pega o Sneaky
-            if (tokenValue->codigo != pontoevirgula) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula");
             }
             
@@ -234,13 +234,13 @@ void compilaBloco(FILE* file, int escopo) {
             continue;
         }
         
-        if (tokenValue->codigo == inicio) { // Verificar aqui
+        if (tokenValue->codigo == TOKEN_KEYW_INICIO) { // Verificar aqui
             do {
                 compilaComando(file, escopo);
                 
                 tokenValue = readCurrentToken(); // Verifica se encontrou end
             }
-            while (tokenValue->codigo != fim);
+            while (tokenValue->codigo != TOKEN_KEYW_FIM);
             
             getNextToken(file); // Sneaky
             
@@ -252,104 +252,104 @@ void compilaBloco(FILE* file, int escopo) {
 }
 
 void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., true);
-    token tokenValue;
+    Token* tokenValue;
     
     tokenValue = getNextToken(file);
-    if (tokenValue->codigo != abreparenteses) {
+    if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
         return;
     }
     
     while (true) {
         tokenValue = getNextToken(file);
         
-        if (tokenValue->codigo == variavel || tokenValue->codigo == identificador) {
-            if (tokenValue->codigo == variavel) {
+        if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL || tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
+            if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {
                 tokenValue = getNextToken(file);
             }
             
             do {
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != virgula && tokenValue->codigo != doispontos) {
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um dois pontos");
                 }
                 
-                if (tokenValue->codigo == virgula) {
+                if (tokenValue->codigo == TOKEN_SYMB_VIRGULA) {
                     tokenValue = getNextToken(file);
                 }
             }
-            while(tokenValue->codigo != doispontos);
+            while(tokenValue->codigo != TOKEN_SYMB_DOISPONTOS);
             
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != identificador) {
+            if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
             }
             
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != pontoevirgula && tokenValue->codigo != fechaparenteses) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula ou um fecha parenteses");
             }
             
-            if (tokenValue->codigo == pontoevirgula) {
+            if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA) {
                 continue;
             }
         }
         
-        if (tokenValue->codigo == funcao) {
+        if (tokenValue->codigo == TOKEN_KEYW_FUNCAO) {
             do {
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != virgula && tokenValue->codigo != doispontos) {
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um dois pontos");
                 }
             }
-            while(tokenValue->codigo != doispontos);
+            while(tokenValue->codigo != TOKEN_SYMB_DOISPONTOS);
             
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != identificador) {
+            if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
             }
             
             tokenValue = getNextToken(file);
-            if (tokenValue->codigo != pontoevirgula && tokenValue->codigo != fechaparenteses) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula ou um fecha parenteses");
             }
             
-            if (tokenValue->codigo == pontoevirgula) {
+            if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA) {
                 continue;
             }
         }
         
-        if (tokenValue->codigo == procedimento) {
+        if (tokenValue->codigo == TOKEN_KEYW_PROCEDIMENTO) {
             do {
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != identificador) {
+                if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
                 
                 tokenValue = getNextToken(file);
-                if (tokenValue->codigo != virgula &&
-                    tokenValue->codigo != pontoevirgula && 
-                    tokenValue->codigo != fechaparenteses)
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA &&
+                    tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && 
+                    tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES)
                 {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula ou um fecha parenteses");
                 }
             }
-            while(tokenValue->codigo != pontoevirgula && tokenValue->codigo != fechaparenteses);
+            while(tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
             
-            if (tokenValue->codigo == pontoevirgula) {
+            if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA) {
                 continue;
             }
         }
         
-        if (tokenValue->codigo == fechaparenteses) {
+        if (tokenValue->codigo == TOKEN_SYMB_FECHAPARENTESES) {
             getNextToken(file);
             return;
         }
@@ -359,14 +359,14 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
 }
 
 void compilaComando(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     tokenValue = getNextToken(file);
     
-    if (tokenValue->codigo == numero) {   // Comando Padrão e Adição de Rótulo
+    if (tokenValue->codigo == TOKEN_OPER_NUMERO) {   // Comando Padrão e Adição de Rótulo
         tokenValue = getNextToken(file);
         
-        if (tokenValue->codigo != doispontos) {
+        if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um doispontos");
         }
         
@@ -377,45 +377,45 @@ void compilaComando(FILE* file, int escopo) { // NEXT: analex(..., false);
 }
 
 void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     tokenValue = readCurrentToken();
     
-    if (tokenValue->codigo == identificador) { // Atribuição, procedimento e função
+    if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) { // Atribuição, procedimento e função
         tokenValue = getNextToken(file);
         
-        if (tokenValue->codigo == abreparenteses) { // Chamada Função
+        if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) { // Chamada Função
             do {
                 compilaExpressao(file, escopo);
                 
                 tokenValue = readCurrentToken();
                 
-                if (tokenValue->codigo != fechaparenteses && tokenValue->codigo != virgula) {
+                if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES && tokenValue->codigo != TOKEN_SYMB_VIRGULA) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou fechaparenteses");
                 }
             }
-            while (tokenValue->codigo != fechaparenteses);
+            while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
             
             getNextToken(file); // Sneak
         }
         
-        if (tokenValue->codigo == abrecolchetes || tokenValue->codigo == atribuicao) {
-            if (tokenValue->codigo == abrecolchetes) {
+        if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES || tokenValue->codigo == TOKEN_SYMB_ATRIBUICAO) {
+            if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES) {
                 do {
                     compilaExpressao(file, escopo);
                     
                     tokenValue = readCurrentToken();
                     
-                    if (tokenValue->codigo != virgula && tokenValue->codigo != fechacolchetes) {
+                    if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                     }
                 }
-                while(tokenValue->codigo != fechacolchetes);
+                while(tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES);
                 
                 tokenValue = getNextToken(file);
             }
             
-            if (tokenValue->codigo != atribuicao) {
+            if (tokenValue->codigo != TOKEN_SYMB_ATRIBUICAO) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se atribuicao");
             }
             
@@ -425,10 +425,10 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         return;
     }
     
-    if (tokenValue->codigo == vapara) {
+    if (tokenValue->codigo == TOKEN_KEYW_VAPARA) {
         tokenValue = getNextToken(file);
         
-        if (tokenValue->codigo != numero) {
+        if (tokenValue->codigo != TOKEN_OPER_NUMERO) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se numero");
         }
         
@@ -436,7 +436,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         return;
     }
     
-    if (tokenValue->codigo == inicio) {
+    if (tokenValue->codigo == TOKEN_KEYW_INICIO) {
         do {
             getNextToken(file);
             
@@ -444,21 +444,21 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
             
             tokenValue = readCurrentToken();
             
-            if (tokenValue->codigo != pontoevirgula && tokenValue->codigo != fim) {
+            if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_KEYW_FIM) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um fim ou pontoevirgula");
             }
         }
-        while (tokenValue->codigo != fim);
+        while (tokenValue->codigo != TOKEN_KEYW_FIM);
         
         getNextToken(file); // Sneaky
         return;
     }
     
-    if (tokenValue->codigo == se) {
+    if (tokenValue->codigo == TOKEN_KEYW_SE) {
         compilaExpressao(file, escopo);
         
         tokenValue = readCurrentToken();
-        if (tokenValue->codigo != entao) {
+        if (tokenValue->codigo != TOKEN_KEYW_ENTAO) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se entao");
         }
         
@@ -466,7 +466,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         compilaComandoSemRotulo(file, escopo);
         
         tokenValue = readCurrentToken(); // Gets Skenay
-        if (tokenValue->codigo != senao) {
+        if (tokenValue->codigo != TOKEN_KEYW_SENAO) {
             return;
         }
         
@@ -476,11 +476,11 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         return;
     }
     
-    if (tokenValue->codigo == enquanto) {
+    if (tokenValue->codigo == TOKEN_KEYW_ENQUANTO) {
         compilaExpressao(file, escopo);
         
         tokenValue = readCurrentToken();
-        if (tokenValue->codigo != faca) {
+        if (tokenValue->codigo != TOKEN_KEYW_FACA) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se faca");
         }
         
@@ -494,18 +494,18 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
 }
 
 void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     compilaExpressaoSimples(file, escopo); 
     
     tokenValue = readCurrentToken(); // Gets sneaky
     if (
-        tokenValue->codigo == igual ||
-        tokenValue->codigo == diferente ||
-        tokenValue->codigo == maiorouigual ||
-        tokenValue->codigo == menorouigual ||
-        tokenValue->codigo == maior ||
-        tokenValue->codigo == menor
+        tokenValue->codigo == TOKEN_SYMB_IGUAL ||
+        tokenValue->codigo == TOKEN_SYMB_DIFERENTE ||
+        tokenValue->codigo == TOKEN_SYMB_MAIORIGUAL ||
+        tokenValue->codigo == TOKEN_SYMB_MENORIGUAL ||
+        tokenValue->codigo == TOKEN_SYMB_MAIOR ||
+        tokenValue->codigo == TOKEN_SYMB_MENOR
     ) {
         compilaExpressaoSimples(file, escopo); // Sneaky
     }
@@ -514,11 +514,11 @@ void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
 }
 
 void compilaExpressaoSimples(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     tokenValue = getNextToken(file);
     
-    if (tokenValue->codigo == mais || tokenValue->codigo == menos) {
+    if (tokenValue->codigo == TOKEN_SYMB_MAIS || tokenValue->codigo == TOKEN_SYMB_MENOS) {
         tokenValue = getNextToken(file);
     }
     
@@ -528,9 +528,9 @@ void compilaExpressaoSimples(FILE* file, int escopo) { // NEXT: analex(..., fals
         tokenValue = readCurrentToken();
         
         if (
-            tokenValue->codigo == mais ||
-            tokenValue->codigo == menos ||
-            tokenValue->codigo == ou
+            tokenValue->codigo == TOKEN_SYMB_MAIS ||
+            tokenValue->codigo == TOKEN_SYMB_MENOS ||
+            tokenValue->codigo == TOKEN_SYMB_OU
         ) {
             getNextToken(file);
             compilaTermo(file, escopo);
@@ -542,7 +542,7 @@ void compilaExpressaoSimples(FILE* file, int escopo) { // NEXT: analex(..., fals
 }
 
 void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     compilaFator(file, escopo);
     
@@ -550,9 +550,9 @@ void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
         tokenValue = readCurrentToken(); // Gets Sneaky
         
         if (
-            tokenValue->codigo == vezes ||
-            tokenValue->codigo == dividir ||
-            tokenValue->codigo == e
+            tokenValue->codigo == TOKEN_SYMB_VEZES ||
+            tokenValue->codigo == TOKEN_SYMB_DIVIDIR ||
+            tokenValue->codigo == TOKEN_SYMB_E
         ) {
             getNextToken(file);
             compilaFator(file, escopo);
@@ -564,37 +564,37 @@ void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
 }
 
 void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
-    token tokenValue;
+    Token* tokenValue;
     
     tokenValue = readCurrentToken();
     
-    if (tokenValue->codigo == identificador) {
+    if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
         tokenValue = getNextToken(file); // Sneaky
         
-        if (tokenValue->codigo == abreparenteses) {
+        if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
             do {
                 compilaExpressao(file, escopo);
                 
                 tokenValue = readCurrentToken(); // Gets Sneaky
-                if (tokenValue->codigo != virgula && tokenValue->codigo != fechaparenteses) {
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                 }
             }
-            while(tokenValue->codigo != fechaparenteses);
+            while(tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
             
             getNextToken(file); // Sneaky
         }
         
-        if (tokenValue->codigo == abrecolchetes) {
+        if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES) {
             do {
                 compilaExpressao(file, escopo);
                 
                 tokenValue = readCurrentToken(); // Gets Senaky
-                if (tokenValue->codigo != virgula && tokenValue->codigo != fechacolchetes) {
+                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                 }
             }
-            while(tokenValue->codigo != fechacolchetes);
+            while(tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES);
             
             getNextToken(file); // Sneaky
         }
@@ -602,7 +602,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
         return;
     }
     
-    if (tokenValue->codigo == numero) {
+    if (tokenValue->codigo == TOKEN_OPER_NUMERO) {
         getNextToken(file); // Sneaky
         
         return;

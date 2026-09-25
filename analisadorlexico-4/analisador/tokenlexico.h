@@ -49,6 +49,7 @@ typedef enum {
     TOKEN_OPER_EOF,
 
     TOKEN_OPER_IDENTIFICADOR,
+    TOKEN_OPER_NUMERO,
 } TokenTipo;
 
 typedef struct {

@@ -15,8 +15,8 @@ typedef struct {
 void construirHashTable(HashTable* hashTable, int byteSize, i8 maxCount, void (*d) (Elemento a), i8 (*g) (Elemento a));
 void destruirHashTable(HashTable* HashTable);
 
-bool inserirElemento(HashTable* hashTable, Elemento adicionarElemento);
+bool inserirElementoHashTable(HashTable* hashTable, Elemento adicionarElemento);
 bool removerOnIndex(HashTable* hashTable, int index);
-Elemento buscarElemento(HashTable* hashTable, int index);
+Elemento buscarElementoHashTable(HashTable* hashTable, int index);
 
 #endif

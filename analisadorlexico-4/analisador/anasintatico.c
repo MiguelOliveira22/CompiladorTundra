@@ -608,11 +608,11 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
         return;
     }
     
-    if (tokenValue->codigo == abreparenteses) {
+    if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
         compilaExpressao(file, escopo);
         
         tokenValue = readCurrentToken(); // Gets Sneaky
-        if (tokenValue->codigo != fechaparenteses) {
+        if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fechaparenteses");
         }
         
@@ -621,7 +621,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
         return;
     }
     
-    if (tokenValue->codigo == nao) {
+    if (tokenValue->codigo == TOKEN_SYMB_NAO) {
         getNextToken(file);
         compilaFator(file, escopo); // Sneaky
         

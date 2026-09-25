@@ -12,13 +12,35 @@ static void destruirPonteiros() {
         return;
     }
 
+    NoLista* atual = ponteirosParaDestruir->inicio;
+    while (atual != NULL) {
+
+        atual = atual->info;
+    }
+
     destruirLista(ponteirosParaDestruir);
 }
 
-void associarPonteirosParaErros(Elemento* ponteiro) {
+void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
     if (ponteirosParaDestruir == NULL) {
-        construirLista(ponteirosParaDestruir, );
+        construirLista(ponteirosParaDestruir, NULL, NULL, NULL);
     }
+
+    NoLista* atual = ponteirosParaDestruir->inicio;
+    NoLista* anterior = NULL;
+
+    while (atual != NULL) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    NoLista* novoNo;
+    novoNo = (NoLista*) malloc(sizeof(NoLista));
+
+    novoNo->info = { ponteiro, destrutor };
+    novoNo->prox = NULL;
+
+    anterior->prox = novoNo;
 }
 
 void sairErroTerminal(ErrorTipos erro, string message)

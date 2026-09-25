@@ -4,13 +4,14 @@
 #include "lista.h"
 #include "anasintatico.h"
 
+static Lista* tabelaSimbolos = NULL;
+
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
         sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "Nenhum Arquivo Incluido Para Compilar");
     }
 
-    // Adicionar tabela de symbols para a base para referenciar
-    // Lista<Lista<SymbolTable>>
+    construirLista(tabelaSimbolos, );
 
     for (int i = 1; i < argc; i ++) {
         FILE* atualArquivoParaCompilar = fopen(argv[i], "r");

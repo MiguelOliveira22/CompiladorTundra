@@ -10,44 +10,44 @@
 
 static Token* storedToken = NULL;
 static ErrorPosition currentPosition = {0, 0};
-
 ErrorPosition filePosition = {0, 0};
 
 void readNextToken(FILE* currentFile) {
     currentPosition.linha = filePosition.linha;
     currentPosition.coluna = filePosition.coluna;
 
-    string currentIdentifier = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
+    string currentIdentifier = (string) malloc(CAP_SIZE_IDENTIFIER);
     associarPonteirosParaErros(currentIdentifier);
 
     if (currentIdentifier != NULL) {
-        memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
+        memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
     }
     else {
         sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
     }
 
     if (feof(currentFile)) {
-        storedToken = &tokenDefinitions[TOKEN_OPER_EOF];
+        storedToken = &tokenEof;
         return;
     }
 
     char currentCharacter;
-    
-    while (storedToken != &tokenDefinitions[TOKEN_OPER_EOF])
+
+    while (storedToken != &tokenEof)
     {
         currentCharacter = (char) fgetc(currentFile);
+
         if (currentCharacter == EOF || isspace(currentCharacter)) {
             storedToken = &;
             return;
         }
         else {
-            string currentSpecialToken = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
+            string currentSpecialToken = (string) malloc(CAP_SIZE_IDENTIFIER);
 
             Token* currentSpecial = NULL;
             int currentSpecialSize = 0;
 
-            if (currentIdentifier == NULL) {
+            if (currentSpecialToken == NULL) {
                 sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
             }
 
@@ -83,7 +83,6 @@ void readNextToken(FILE* currentFile) {
         }
         else {
             sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
-            return;
         }
     }
 }

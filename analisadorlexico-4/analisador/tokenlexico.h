@@ -57,8 +57,8 @@ typedef struct {
     bool tokenEspecial;
 } Token;
 
-Token* getToken(string name);
-
-extern Token tokenDefinitions[TOKEN_OPER_EOF + 1];
+extern Token tokenDefinitions[];
+extern Token tokenEof;
+extern Token tokenInvalido;
 
 #endif

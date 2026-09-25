@@ -30,9 +30,12 @@ void destruirLista(Lista* listaParaDestruir) {
         }
         free(anterior);
     }
+
+    listaParaDestruir->count = 0;
+    listaParaDestruir->inicio = NULL;
 }
 
-bool inserirElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
+bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento) {
     NoLista* novoNo = (NoLista*) malloc(sizeof(NoLista));
     if (novoNo == NULL) {
         return false;
@@ -68,12 +71,12 @@ bool inserirElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
     return true;
 }
 
-bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
+bool removerElementoLista(Lista* listaParaRemover, Elemento removerElemento) {
     NoLista* atual = listaParaRemover->inicio;
     NoLista* anterior = NULL;
 
     while (atual != NULL) {
-        if ((listaParaRemover->comparar) (removerElemento, atual) == 0) {
+        if ((listaParaRemover->comparar) (removerElemento, atual->info) == 0) {
             if (anterior == NULL) {
                 listaParaRemover->inicio = atual->prox;
             }
@@ -98,7 +101,7 @@ bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
     return false;
 }
 
-Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento) {
+Elemento buscarElementoLista(Lista* listaParaBuscar, Elemento buscarElemento) {
     NoLista* atual = listaParaBuscar->inicio;
 
     while (atual != NULL) {
@@ -113,6 +116,10 @@ Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento) {
 }
 
 Elemento buscarElementoPorIndice(Lista* listaParaBuscar, int index) {
+    if (index < 0) {
+        return NULL;
+    }
+
     NoLista* atual = listaParaBuscar->inicio;
 
     if (index >= listaParaBuscar->count) {

@@ -11,7 +11,7 @@ typedef struct NoLista {
 
 typedef struct {
     NoLista* inicio;
-    i8 count;
+    int count;
 
     int (*comparar) (Elemento a, Elemento b);
     void (*mostrar) (Elemento a);
@@ -22,7 +22,7 @@ void construirLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b)
 void destruirLista(Lista* listaParaDestruir);
 
 bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento);
-bool removerElemento(Lista* listaParaRemover, Elemento removerElemento);
+bool removerElementoLista(Lista* listaParaRemover, Elemento removerElemento);
 Elemento buscarElementoLista(Lista* listaParaBuscar, Elemento buscarElemento);
 Elemento buscarElementoPorIndice(Lista* listaParaBuscar, int index);
 void printarLista(Lista* listaParaPrintar);

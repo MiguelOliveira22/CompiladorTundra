@@ -2,6 +2,9 @@
 
 #include "analisadortools.h"
 #include "error.h"
+#include "lista.h"
+
+static Lista 
 
 int main(int argc, char* argv[])
 {

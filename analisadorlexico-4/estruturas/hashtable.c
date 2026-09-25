@@ -8,7 +8,7 @@ void construirHashTable(HashTable* hashTable, int byteSize, i8 maxCount, void (*
     hashTable->conteudo = calloc(maxCount, byteSize);
 
     if (hashTable->conteudo == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Memoria Insuficiente Para Alocar A Tabela", );
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Memoria Insuficiente Para Alocar A Tabela");
     }
 
     hashTable->maxCount = maxCount;
@@ -17,6 +17,7 @@ void construirHashTable(HashTable* hashTable, int byteSize, i8 maxCount, void (*
     hashTable->destruir = d;
     hashTable->getHash  = g;
 }
+
 void destruirHashTable(HashTable* hashTable) {
     unsigned char cont[] = (unsigned char**) hashTable->conteudo;
 
@@ -27,7 +28,7 @@ void destruirHashTable(HashTable* hashTable) {
 }
 
 bool inserirElemento(HashTable* hashTable, Elemento adicionarElemento) {
-
+    i8 index = hashTable->getHash(adicionarElemento);
 }
 bool removerOnIndex(HashTable* hashTable, int index) {
 

@@ -23,6 +23,9 @@ typedef struct {
     int coluna;
 } ErrorPosition;
 
-void sairErroTerminal(ErrorTipos erro, string message, FILE* fileToClose);
+void sairErroTerminal(ErrorTipos erro, string message);
+
+void destruirPonteiros();
+void associarPonteirosParaErros(Elemento ponteiro);
 
 #endif

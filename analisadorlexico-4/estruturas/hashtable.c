@@ -1,13 +1,18 @@
 #include <stdlib.h>
 
+#include "error.h"
 #include "basics.h"
 #include "hashtable.h"
 
-void construirHashTable(HashTable* hashTable, Elemento* conteudo, int byteCount, i8 maxCount, void (*d) (Elemento a), i8 (*g) (Elemento a)) {
-    hashTable->conteudo = conteudo;
-    hashTable->maxCount = maxCount;
+void construirHashTable(HashTable* hashTable, int byteSize, i8 maxCount, void (*d) (Elemento a), i8 (*g) (Elemento a)) {
+    hashTable->conteudo = calloc(maxCount, byteSize);
 
-    hashTable->byteCount = byteCount;
+    if (hashTable->conteudo == NULL) {
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Memoria Insuficiente Para Alocar A Tabela", );
+    }
+
+    hashTable->maxCount = maxCount;
+    hashTable->byteSize = byteSize;
 
     hashTable->destruir = d;
     hashTable->getHash  = g;
@@ -17,7 +22,7 @@ void destruirHashTable(HashTable* hashTable) {
 
     for (int i = 0; i < hashTable->maxCount; i ++) {
         if ()
-        data[i] = cont[index * hashTable->byteCount + i];
+        data[i] = cont[index * hashTable->byteSize + i];
     }
 }
 
@@ -28,11 +33,11 @@ bool removerOnIndex(HashTable* hashTable, int index) {
 
 }
 Elemento buscarElemento(HashTable* hashTable, int index) {
-    string data = (string) calloc(hashTable->byteCount, sizeof(unsigned char));
+    string data = (string) calloc(hashTable->byteSize, sizeof(unsigned char));
 
     unsigned char cont[] = (unsigned char**) hashTable->conteudo;
-    for (int i = 0; i < hashTable->byteCount; i ++) {
-        data[i] = cont[index * hashTable->byteCount + i];
+    for (int i = 0; i < hashTable->byteSize; i ++) {
+        data[i] = cont[index * hashTable->byteSize + i];
     }
 
     return (Elemento) data;

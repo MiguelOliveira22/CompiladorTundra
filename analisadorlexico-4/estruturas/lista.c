@@ -7,7 +7,7 @@
  * M -> Função para escrever elementos no print.
  * D -> Função para dealocar elementos.
  */
-void construirNovaLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b), void (*m) (Elemento a), void (*d) (Elemento a)) {
+void construirLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b), void (*m) (Elemento a), void (*d) (Elemento a)) {
     listaParaConstruir->inicio = NULL;
     listaParaConstruir->count = 0;
 
@@ -30,7 +30,7 @@ void destruirLista(Lista* listaParaDestruir) {
     }
 }
 
-bool inserirNovoElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
+bool inserirElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
     NoLista* novoNo = (NoLista*) malloc(sizeof(NoLista));
     if (novoNo == NULL) {
         return false;

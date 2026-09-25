@@ -4,17 +4,35 @@
 #include "error.h"
 #include "lista.h"
 
-void sairErroTerminal(ErrorTipos erro, string message, FILE* fileToClose)
-{
-    if (fileToClose != NULL) {
-        fclose(fileToClose);
+static Lista* ponteirosParaDestruir = NULL;
+
+static void destruirPonteiros() {
+    if (ponteirosParaDestruir == NULL) {
+        return;
     }
 
+    for (int i = 0; i < ponteirosParaDestruir->count) {
+
+    }
+
+    destruirLista(ponteirosParaDestruir);
+}
+
+void associarPonteirosParaErros(Elemento* ponteiro) {
+    if (ponteirosParaDestruir == NULL) {
+        construirLista(ponteirosParaDestruir, );
+    }
+}
+
+void sairErroTerminal(ErrorTipos erro, string message)
+{
+    destruirPonteiros();
+
     if (strlen(message) > 0) {
-        printf("Erro %d - %s");
+        printf("Erro %d - %s", erro, message);
     }
     else {
-        printf("Erro %d - Encerrando Execução");
+        printf("Erro %d - Encerrando Execução", erro);
     }
 
     exit(erro);

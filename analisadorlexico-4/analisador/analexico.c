@@ -8,7 +8,7 @@
 #include "tokenlexico.h"
 #include "analexico.h"
 
-Token* storedToken = NULL;
+static Token* storedToken = NULL;
 
 ErrorPosition currentPosition;
 ErrorPosition filePosition;
@@ -18,12 +18,12 @@ void readNextToken(FILE* currentFile) {
     currentPosition.coluna = filePosition.coluna;
 
     string currentIdentifier = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
+
     if (currentIdentifier != NULL) {
         memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
     }
     else {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial", currentFile);
-        return;
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
     }
 
     if (feof(currentFile)) {
@@ -46,8 +46,7 @@ void readNextToken(FILE* currentFile) {
             int currentSpecialSize = 0;
 
             if (currentIdentifier == NULL) {
-                sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial", currentFile);
-                return;
+                sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
             }
 
             for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i++) {
@@ -81,7 +80,7 @@ void readNextToken(FILE* currentFile) {
             strcat(currentIdentifier, &currentCharacter);
         }
         else {
-            sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)", currentFile);
+            sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
             return;
         }
     }

@@ -7,6 +7,11 @@
 
 static Lista* ponteirosParaDestruir = NULL;
 
+typedef struct {
+    Elemento dados;
+    void (*d) (Elemento a);
+} PonteiroDestrutivel;
+
 static void destruirPonteiros() {
     if (ponteirosParaDestruir == NULL) {
         return;
@@ -37,7 +42,11 @@ void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
     NoLista* novoNo;
     novoNo = (NoLista*) malloc(sizeof(NoLista));
 
-    novoNo->info = { ponteiro, destrutor };
+    PonteiroDestrutivel* novoDado = (PonteiroDestrutivel*) malloc(sizeof(PonteiroDestrutivel));
+    novoDado->dados = ponteiro;
+    novoDado->d = d;
+
+    novoNo->info = novoDado;
     novoNo->prox = NULL;
 
     anterior->prox = novoNo;

@@ -58,7 +58,7 @@ typedef struct {
     bool tokenEspecial;
 } Token;
 
-extern Token tokenDefinitions[];
+extern Token tokenDefinitions[TOKEN_SYMB_FECHACOMENTARIO + 1];
 extern Token tokenEof;
 extern Token tokenInvalido;
 

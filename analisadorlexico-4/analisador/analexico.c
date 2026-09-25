@@ -32,25 +32,31 @@ void readNextToken(FILE* currentFile) {
     }
 
     char currentCharacter;
+    Token* foundToken = NULL;
 
     while (storedToken != &tokenEof)
     {
         currentCharacter = (char) fgetc(currentFile);
 
         if (currentCharacter == EOF || isspace(currentCharacter)) {
-            storedToken = &;
+            
+
+            for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
+                if (strcmp(currentIdentifier, tokenDefinitions[i].identificador) == 0) {
+                    foundToken = &tokenDefinitions[i];
+                }
+            }
+
+            if (foundToken == NULL) {
+                storedToken = foundToken;
+            }
+            else {
+                storedToken = &tokenInvalido;
+            }
+            
             return;
         }
         else {
-            string currentSpecialToken = (string) malloc(CAP_SIZE_IDENTIFIER);
-
-            Token* currentSpecial = NULL;
-            int currentSpecialSize = 0;
-
-            if (currentSpecialToken == NULL) {
-                sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
-            }
-
             for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i++) {
                 memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
                 fgets(currentSpecialToken, strlen(tokenDefinitions[i].identificador), currentFile);
@@ -63,11 +69,9 @@ void readNextToken(FILE* currentFile) {
                 }
             }
 
-            if (currentSpecial != NULL) {
-                storedToken = &;
+            if (foundToken == NULL) {
+                strcat(currentIdentifier, &currentCharacter);
             }
-
-            return;
         }
 
         if (currentCharacter == '\n') {
@@ -77,6 +81,7 @@ void readNextToken(FILE* currentFile) {
         else {
             filePosition.linha += 1;
         }
+        
 
         if (strlen(currentIdentifier) + 1 < CAP_SIZE_IDENTIFIER) {
             strcat(currentIdentifier, &currentCharacter);

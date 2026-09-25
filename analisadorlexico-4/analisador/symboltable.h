@@ -18,4 +18,6 @@ typedef struct {
 
 extern Token symbolTiposDefinition[TYPE_BASE_INTEGER + 1];
 
+void adicionarSymbolTable
+
 #endif

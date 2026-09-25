@@ -28,7 +28,7 @@ void compilaPrograma(FILE* file, int escopo) {
     readNextToken(file);
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_KEYW_PROGRAMA) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um PROGRAM!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um PROGRAM!");
     }
     
     readNextToken(file);
@@ -36,13 +36,13 @@ void compilaPrograma(FILE* file, int escopo) {
 
     // TODO: Adicionar p/ symboltable
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }
     
     readNextToken(file);
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um abre parenteses!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um abre parenteses!");
     }
     
     while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
@@ -50,20 +50,20 @@ void compilaPrograma(FILE* file, int escopo) {
         tokenValue = getCurrentToken();
         // TODO: Adicionar p/ symboltable
         if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
-            sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!", file);
+            sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!");
         }
         
         readNextToken(file);
         tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
-            sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um virgula ou um fecha parenteses!", file);
+            sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um virgula ou um fecha parenteses!");
         }
     }
     
     readNextToken(file);
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula!");
     }
     
     readNextToken(file);
@@ -72,16 +72,16 @@ void compilaPrograma(FILE* file, int escopo) {
     
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_PONTO) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto final!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto final!");
     }
     
     readNextToken(file);
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_OPER_EOF) {
-        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fim de arquivo!", file);
+        sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fim de arquivo!");
     }
     
-    sairErroTerminal(file, ERROR_OK_OPERATION_SUCCESS, "Programa sintaticamente correto!");
+    sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa sintaticamente correto!");
 }
 
 void compilaBloco(FILE* file, int escopo) {

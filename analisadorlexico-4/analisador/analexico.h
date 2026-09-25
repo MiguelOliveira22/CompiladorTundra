@@ -10,5 +10,6 @@
 
 void   readNextToken(FILE* currentFile);
 Token* getCurrentToken(void);
+Token* getNextToken(FILE* currentFile);
 
 #endif

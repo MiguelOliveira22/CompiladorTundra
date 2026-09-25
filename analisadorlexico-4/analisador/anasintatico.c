@@ -25,6 +25,7 @@ void anasin(FILE* file) {
 void compilaPrograma(FILE* file, int escopo) {
     Token* tokenValue;
     
+
     tokenValue = getNextToken(file);
     if (tokenValue->codigo != TOKEN_KEYW_PROGRAMA) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um PROGRAM!");
@@ -63,7 +64,7 @@ void compilaPrograma(FILE* file, int escopo) {
     tokenValue = getNextToken(file);
     compilaBloco(file, escopo);
     
-    tokenValue = readCurrentToken();
+    tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_PONTO) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto final!");
     }
@@ -80,7 +81,7 @@ void compilaBloco(FILE* file, int escopo) {
     Token* tokenValue;
 
     while (true) {
-        tokenValue = readCurrentToken();
+        tokenValue = getCurrentToken();
         
         if (tokenValue->codigo == TOKEN_KEYW_ROTULO) {
             do {
@@ -136,7 +137,7 @@ void compilaBloco(FILE* file, int escopo) {
             getNextToken(file);
             do {
                 do {
-                    tokenValue = readCurrentToken();
+                    tokenValue = getCurrentToken();
                     
                     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
@@ -179,7 +180,7 @@ void compilaBloco(FILE* file, int escopo) {
             
             compilaParametrosFormais(file, escopo);
             
-            tokenValue = readCurrentToken(); // Pega o Sneaky
+            tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um pontoevirgula");
             }
@@ -187,7 +188,7 @@ void compilaBloco(FILE* file, int escopo) {
             getNextToken(file);
             compilaBloco(file, escopo + 1);
             
-            tokenValue = readCurrentToken(); // Pega o Sneaky
+            tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula");
             }
@@ -205,7 +206,7 @@ void compilaBloco(FILE* file, int escopo) {
             
             compilaParametrosFormais(file, escopo);
             
-            tokenValue = readCurrentToken(); // Pega o doispontos
+            tokenValue = getCurrentToken(); // Pega o doispontos
             if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um doispontos");
             }
@@ -224,7 +225,7 @@ void compilaBloco(FILE* file, int escopo) {
             getNextToken(file);
             compilaBloco(file, escopo + 1);
             
-            tokenValue = readCurrentToken(); // Pega o Sneaky
+            tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula");
             }
@@ -238,7 +239,7 @@ void compilaBloco(FILE* file, int escopo) {
             do {
                 compilaComando(file, escopo);
                 
-                tokenValue = readCurrentToken(); // Verifica se encontrou end
+                tokenValue = getCurrentToken(); // Verifica se encontrou end
             }
             while (tokenValue->codigo != TOKEN_KEYW_FIM);
             
@@ -379,7 +380,7 @@ void compilaComando(FILE* file, int escopo) { // NEXT: analex(..., false);
 void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., false);
     Token* tokenValue;
     
-    tokenValue = readCurrentToken();
+    tokenValue = getCurrentToken();
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) { // Atribuição, procedimento e função
         tokenValue = getNextToken(file);
@@ -388,7 +389,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
             do {
                 compilaExpressao(file, escopo);
                 
-                tokenValue = readCurrentToken();
+                tokenValue = getCurrentToken();
                 
                 if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES && tokenValue->codigo != TOKEN_SYMB_VIRGULA) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou fechaparenteses");
@@ -404,7 +405,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
                 do {
                     compilaExpressao(file, escopo);
                     
-                    tokenValue = readCurrentToken();
+                    tokenValue = getCurrentToken();
                     
                     if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
@@ -442,7 +443,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
             
             compilaComando(file, escopo + 1);
             
-            tokenValue = readCurrentToken();
+            tokenValue = getCurrentToken();
             
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_KEYW_FIM) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um fim ou pontoevirgula");
@@ -457,7 +458,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
     if (tokenValue->codigo == TOKEN_KEYW_SE) {
         compilaExpressao(file, escopo);
         
-        tokenValue = readCurrentToken();
+        tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_KEYW_ENTAO) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se entao");
         }
@@ -465,7 +466,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
         tokenValue = getNextToken(file);
         compilaComandoSemRotulo(file, escopo);
         
-        tokenValue = readCurrentToken(); // Gets Skenay
+        tokenValue = getCurrentToken(); // Gets Skenay
         if (tokenValue->codigo != TOKEN_KEYW_SENAO) {
             return;
         }
@@ -479,7 +480,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
     if (tokenValue->codigo == TOKEN_KEYW_ENQUANTO) {
         compilaExpressao(file, escopo);
         
-        tokenValue = readCurrentToken();
+        tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_KEYW_FACA) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se faca");
         }
@@ -498,7 +499,7 @@ void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
     
     compilaExpressaoSimples(file, escopo); 
     
-    tokenValue = readCurrentToken(); // Gets sneaky
+    tokenValue = getCurrentToken(); // Gets sneaky
     if (
         tokenValue->codigo == TOKEN_SYMB_IGUAL ||
         tokenValue->codigo == TOKEN_SYMB_DIFERENTE ||
@@ -525,7 +526,7 @@ void compilaExpressaoSimples(FILE* file, int escopo) { // NEXT: analex(..., fals
     compilaTermo(file, escopo);
     
     while (true) {
-        tokenValue = readCurrentToken();
+        tokenValue = getCurrentToken();
         
         if (
             tokenValue->codigo == TOKEN_SYMB_MAIS ||
@@ -547,7 +548,7 @@ void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
     compilaFator(file, escopo);
     
     while (true) {
-        tokenValue = readCurrentToken(); // Gets Sneaky
+        tokenValue = getCurrentToken(); // Gets Sneaky
         
         if (
             tokenValue->codigo == TOKEN_SYMB_VEZES ||
@@ -566,7 +567,7 @@ void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
 void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
     Token* tokenValue;
     
-    tokenValue = readCurrentToken();
+    tokenValue = getCurrentToken();
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
         tokenValue = getNextToken(file); // Sneaky
@@ -575,7 +576,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
             do {
                 compilaExpressao(file, escopo);
                 
-                tokenValue = readCurrentToken(); // Gets Sneaky
+                tokenValue = getCurrentToken(); // Gets Sneaky
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                 }
@@ -589,7 +590,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
             do {
                 compilaExpressao(file, escopo);
                 
-                tokenValue = readCurrentToken(); // Gets Senaky
+                tokenValue = getCurrentToken(); // Gets Senaky
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                 }
@@ -611,7 +612,7 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
     if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
         compilaExpressao(file, escopo);
         
-        tokenValue = readCurrentToken(); // Gets Sneaky
+        tokenValue = getCurrentToken(); // Gets Sneaky
         if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fechaparenteses");
         }

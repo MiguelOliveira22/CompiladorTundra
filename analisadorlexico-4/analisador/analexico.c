@@ -12,6 +12,81 @@ static Token* storedToken = NULL;
 static ErrorPosition currentPosition = {0, 0};
 ErrorPosition filePosition = {0, 0};
 
+Token* getIdentifierValid(char* word) {
+    int wordSize = strlen(word);
+    
+    if (wordSize == 0) {
+        return false;
+    }
+    
+    for (int i = 0; i < wordSize; i ++) {
+        if (word[i] == '_' && i != 0) {
+            continue;
+        }
+        
+        if ((word[i] >= '0' && word[i] <= '9') && i != 0) {
+            continue;
+        }
+        
+        if (word[i] >= 'A' && word[i] <= 'Z') {
+            continue;
+        }
+        
+        if (word[i] >= 'a' && word[i] <= 'z') {
+            continue;
+        }
+        
+        return NULL;
+    }
+    
+    Token* identifier = (Token*) malloc(sizeof(Token));
+
+    if (identifier == NULL) {
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
+    }
+
+    identifier->codigo = TOKEN_OPER_NUMERO;
+    identifier->identificador = word;
+    identifier->tokenEspecial = false;
+
+    return identifier;
+}
+
+Token* getNumericValid(char* word) {
+    int wordSize = strlen(word);
+    
+    if (wordSize == 0) {
+        return NULL;
+    }
+    
+    for (int i = 0; i < wordSize; i ++) {
+        if (word[i] < '0' || word[i] > '9') {
+            return NULL;
+        }
+    }
+    
+    int number = 0;
+    for (int i = 0; i < wordSize; i ++) {
+        number *= 10;
+        
+        if (word[i] >= '0' && word[i] <= '9') {
+            number += (int) (word[i] - '0');
+        }
+    }
+
+    Token* identifier = (Token*) malloc(sizeof(Token));
+
+    if (identifier == NULL) {
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
+    }
+
+    identifier->codigo = TOKEN_OPER_NUMERO;
+    identifier->identificador = word;
+    identifier->tokenEspecial = false;
+    
+    return identifier;
+}
+
 void readNextToken(FILE* currentFile) {
     currentPosition.linha = filePosition.linha;
     currentPosition.coluna = filePosition.coluna;
@@ -102,81 +177,11 @@ void readNextToken(FILE* currentFile) {
     }
 }
 
-Token* getIdentifierValid(char* word) {
-    int wordSize = strlen(word);
-    
-    if (wordSize == 0) {
-        return false;
-    }
-    
-    for (int i = 0; i < wordSize; i ++) {
-        if (word[i] == '_' && i != 0) {
-            continue;
-        }
-        
-        if ((word[i] >= '0' && word[i] <= '9') && i != 0) {
-            continue;
-        }
-        
-        if (word[i] >= 'A' && word[i] <= 'Z') {
-            continue;
-        }
-        
-        if (word[i] >= 'a' && word[i] <= 'z') {
-            continue;
-        }
-        
-        return NULL;
-    }
-    
-    Token* identifier = (Token*) malloc(sizeof(Token));
-
-    if (identifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
-    }
-
-    identifier->codigo = TOKEN_OPER_NUMERO;
-    identifier->identificador = word;
-    identifier->tokenEspecial = false;
-
-    return identifier;
-}
-
-Token* getNumericValid(char* word) {
-    int wordSize = strlen(word);
-    
-    if (wordSize == 0) {
-        return NULL;
-    }
-    
-    for (int i = 0; i < wordSize; i ++) {
-        if (word[i] < '0' || word[i] > '9') {
-            return NULL;
-        }
-    }
-    
-    int number = 0;
-    for (int i = 0; i < wordSize; i ++) {
-        number *= 10;
-        
-        if (word[i] >= '0' && word[i] <= '9') {
-            number += (int) (word[i] - '0');
-        }
-    }
-
-    Token* identifier = (Token*) malloc(sizeof(Token));
-
-    if (identifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
-    }
-
-    identifier->codigo = TOKEN_OPER_NUMERO;
-    identifier->identificador = word;
-    identifier->tokenEspecial = false;
-    
-    return identifier;
-}
-
 Token* getCurrentToken() {
     return storedToken;
+}
+
+Token* getNextToken(FILE* currentFile){
+    readNextToken(currentFile);
+    return getCurrentToken();
 }

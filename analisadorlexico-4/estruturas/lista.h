@@ -24,6 +24,7 @@ void destruirLista(Lista* listaParaDestruir);
 bool inserirElemento(Lista* listaParaInserir, Elemento adicionarElemento);
 bool removerElemento(Lista* listaParaRemover, Elemento removerElemento);
 Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento);
-Elemento buscarElemento(Lista* listaParaBuscar, int index);
+Elemento buscarElementoPorIndice(Lista* listaParaBuscar, int index);
+void printarLista(Lista* listaParaPrintar);
 
 #endif

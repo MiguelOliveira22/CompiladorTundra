@@ -11,10 +11,11 @@ typedef enum {
 
 typedef struct {
     string symbolIdentificador;
-    Token symbolTipo;
-    TokenTipo symbolNatureza;
+    Token* symbolTipo;
+    SymbolTipo symbolNatureza;
+    Token* referenciaNatureza;
     i8 symbolEscopo;
-} SymbolTable;
+} SymbolGenerico;
 
 extern Token symbolTiposDefinition[TYPE_BASE_INTEGER + 1];
 

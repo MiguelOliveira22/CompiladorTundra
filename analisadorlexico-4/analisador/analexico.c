@@ -9,15 +9,16 @@
 #include "analexico.h"
 
 static Token* storedToken = NULL;
+static ErrorPosition currentPosition = {0, 0};
 
-ErrorPosition currentPosition;
-ErrorPosition filePosition;
+ErrorPosition filePosition = {0, 0};
 
 void readNextToken(FILE* currentFile) {
     currentPosition.linha = filePosition.linha;
     currentPosition.coluna = filePosition.coluna;
 
     string currentIdentifier = (string) malloc(sizeof(char) * CAP_SIZE_IDENTIFIER);
+    associarPonteirosParaErros(currentIdentifier);
 
     if (currentIdentifier != NULL) {
         memset(currentIdentifier, '\0', sizeof(char) * CAP_SIZE_IDENTIFIER);
@@ -32,6 +33,7 @@ void readNextToken(FILE* currentFile) {
     }
 
     char currentCharacter;
+    
     while (storedToken != &tokenDefinitions[TOKEN_OPER_EOF])
     {
         currentCharacter = (char) fgetc(currentFile);

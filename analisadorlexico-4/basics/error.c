@@ -11,10 +11,6 @@ static void destruirPonteiros() {
         return;
     }
 
-    for (int i = 0; i < ponteirosParaDestruir->count) {
-
-    }
-
     destruirLista(ponteirosParaDestruir);
 }
 

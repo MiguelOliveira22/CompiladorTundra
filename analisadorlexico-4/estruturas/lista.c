@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "lista.h"
@@ -15,6 +16,7 @@ void construirLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b)
     listaParaConstruir->mostrar = m;
     listaParaConstruir->destruir = d;
 }
+
 void destruirLista(Lista* listaParaDestruir) {
     NoLista* atual = listaParaDestruir->inicio;
     NoLista* anterior = NULL;
@@ -65,6 +67,7 @@ bool inserirElemento(Lista* listaParaInserir, Elemento adicionarElemento) {
 
     return true;
 }
+
 bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
     NoLista* atual = listaParaRemover->inicio;
     NoLista* anterior = NULL;
@@ -94,6 +97,7 @@ bool removerElemento(Lista* listaParaRemover, Elemento removerElemento) {
 
     return false;
 }
+
 Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento) {
     NoLista* atual = listaParaBuscar->inicio;
 
@@ -106,4 +110,27 @@ Elemento buscarElemento(Lista* listaParaBuscar, Elemento buscarElemento) {
     }
 
     return NULL;
+}
+
+Elemento buscarElementoPorIndice(Lista* listaParaBuscar, int index) {
+    NoLista* atual = listaParaBuscar->inicio;
+
+    if (index >= listaParaBuscar->count) {
+        return NULL;
+    }
+
+    for(int i = 0; i < index; i ++) {
+        atual = atual->prox;
+    }
+
+    return atual->info;
+}
+
+void printarLista(Lista* listaParaPrintar) {
+    NoLista* atual = listaParaPrintar->inicio;
+
+    while (atual != NULL) {
+        listaParaPrintar->mostrar(atual->info);
+        atual = atual->prox;
+    }
 }

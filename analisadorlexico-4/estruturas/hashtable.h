@@ -19,6 +19,4 @@ bool inserirElemento(HashTable* hashTable, Elemento adicionarElemento);
 bool removerOnIndex(HashTable* hashTable, int index);
 Elemento buscarElemento(HashTable* hashTable, int index);
 
-// Essa coisa tá bem longe de ser bem feita, mas é oq deu
-
 #endif

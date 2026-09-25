@@ -19,20 +19,26 @@ void construirHashTable(HashTable* hashTable, int byteSize, i8 maxCount, void (*
 }
 
 void destruirHashTable(HashTable* hashTable) {
-    unsigned char cont[] = (unsigned char**) hashTable->conteudo;
+    unsigned char* cont[] = (unsigned char**) hashTable->conteudo;
+
+    if (hashTable->destruir == NULL) {
+        free(hashTable->conteudo);
+        return;
+    }
 
     for (int i = 0; i < hashTable->maxCount; i ++) {
-        if ()
-        data[i] = cont[index * hashTable->byteSize + i];
+        hashTable->destruir();
     }
 }
 
 bool inserirElemento(HashTable* hashTable, Elemento adicionarElemento) {
     i8 index = hashTable->getHash(adicionarElemento);
 }
+
 bool removerOnIndex(HashTable* hashTable, int index) {
 
 }
+
 Elemento buscarElemento(HashTable* hashTable, int index) {
     string data = (string) calloc(hashTable->byteSize, sizeof(unsigned char));
 

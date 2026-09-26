@@ -24,6 +24,6 @@ typedef struct {
 } ErrorPosition;
 
 void sairErroTerminal(ErrorTipos erro, string message);
-void associarPonteirosParaErros(Elemento* ponteiro, void (*d) (Elemento a));
+void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a));
 
 #endif

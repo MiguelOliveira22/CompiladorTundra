@@ -49,6 +49,6 @@ Token tokenDefinitions[] = {
     { TOKEN_SYMB_FECHACOMENTARIO, "*)",        true  }
 };
 
-Token tokenEof = { TOKEN_OPER_INVALIDO, "invalido",  false };
-Token tokenInvalido = { TOKEN_OPER_EOF, "eof",  false };
+Token tokenInvalido = { TOKEN_OPER_INVALIDO, "invalido",  false };
+Token tokenEof = { TOKEN_OPER_EOF, "eof",  false };
 

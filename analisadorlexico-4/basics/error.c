@@ -20,14 +20,15 @@ static void destruirPonteiros() {
     NoLista* atual = ponteirosParaDestruir->inicio;
     while (atual != NULL) {
 
-        atual = atual->info;
+        atual = atual->prox;
     }
 
     destruirLista(ponteirosParaDestruir);
 }
 
-void associarPonteirosParaErros(Elemento* ponteiro, void (*d) (Elemento a)) {
+void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
     if (ponteirosParaDestruir == NULL) {
+        ponteirosParaDestruir = (Lista*) malloc(sizeof(Lista));   // <-- faltava isso
         construirLista(ponteirosParaDestruir, NULL, NULL, NULL);
     }
 
@@ -39,17 +40,19 @@ void associarPonteirosParaErros(Elemento* ponteiro, void (*d) (Elemento a)) {
         atual = atual->prox;
     }
 
-    NoLista* novoNo;
-    novoNo = (NoLista*) malloc(sizeof(NoLista));
-
+    NoLista* novoNo = (NoLista*) malloc(sizeof(NoLista));
     PonteiroDestrutivel* novoDado = (PonteiroDestrutivel*) malloc(sizeof(PonteiroDestrutivel));
     novoDado->dados = ponteiro;
     novoDado->d = d;
-
     novoNo->info = novoDado;
     novoNo->prox = NULL;
 
-    anterior->prox = novoNo;
+    if (anterior == NULL) {                 // lista ainda vazia
+        ponteirosParaDestruir->inicio = novoNo;
+    } else {
+        anterior->prox = novoNo;
+    }
+    ponteirosParaDestruir->count++;
 }
 
 void sairErroTerminal(ErrorTipos erro, string message)

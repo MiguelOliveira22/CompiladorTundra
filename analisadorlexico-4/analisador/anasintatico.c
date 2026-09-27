@@ -18,7 +18,52 @@ void compilaExpressaoSimples(FILE* file, int escopo);
 void compilaTermo(FILE* file, int escopo);
 void compilaFator(FILE* file, int escopo);
 
+#define MAX_VARIAVEIS_POR_DECLARACAO 64
+
+// Resolve o "tipo base" (natureza) de um identificador de tipo usado numa declaração:
+// 1) Primeiro tenta achar entre os tipos-base conhecidos (symbolTiposDefinition: null/integer);
+// 2) Se não achar, tenta achar entre os tipos já declarados antes pelo usuário (ex: "type jonas = integer");
+// 3) Se ainda assim não achar, cai em TYPE_BASE_NULL (tipo desconhecido).
+void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** referenciaResolvida) {
+    Token* tipoBase = buscarTokenTipoBase(tokenTipo->identificador);
+
+    if (tipoBase != NULL) {
+        *naturezaResolvida = (SymbolTipo) tipoBase->codigo;
+        *referenciaResolvida = tipoBase;
+        return;
+    }
+
+    SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador);
+
+    if (aliasEncontrado != NULL) {
+        *naturezaResolvida = aliasEncontrado->symbolNatureza;
+        *referenciaResolvida = aliasEncontrado->referenciaNatureza;
+        return;
+    }
+
+    *naturezaResolvida = TYPE_BASE_NULL;
+    *referenciaResolvida = NULL;
+}
+
+// Verifica se um identificador usado (variável, parâmetro, procedimento ou função sendo
+// chamado) realmente existe na tabela de símbolos. Se ele já saiu de escopo (ou nunca
+// foi declarado), buscarSymbolTable não vai encontrar nada e a gente aborta a compilação.
+void verificarSymbolTable(Token* tokenIdentificador) {
+    if (buscarSymbolTable(tokenIdentificador->identificador) == NULL) {
+        sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, "Identificador Não Declarado (ou Fora de Escopo)");
+    }
+}
+
+// read/write são procedimentos embutidos da linguagem (não aparecem em nenhuma declaração
+// do programa do usuário), então precisam já existir na tabela antes de começar a compilar,
+// senão toda chamada a eles seria acusada como "identificador não declarado".
+static void registrarBuiltinsSymbolTable() {
+    adicionarSymbolTable("read", NULL, TYPE_BASE_NULL, NULL, 0);
+    adicionarSymbolTable("write", NULL, TYPE_BASE_NULL, NULL, 0);
+}
+
 void anasin(FILE* file) {
+    registrarBuiltinsSymbolTable();
     compilaPrograma(file, 0);
 }
 
@@ -33,10 +78,10 @@ void compilaPrograma(FILE* file, int escopo) {
     
     tokenValue = getNextToken(file);
 
-    // TODO: Adicionar p/ symboltable
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }
+    adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo);
     
     tokenValue = getNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
@@ -45,10 +90,10 @@ void compilaPrograma(FILE* file, int escopo) {
     
     while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
         tokenValue = getNextToken(file);
-        // TODO: Adicionar p/ symboltable
         if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!");
         }
+        adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo); // ex: input, output
         
         tokenValue = getNextToken(file);
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
@@ -62,7 +107,7 @@ void compilaPrograma(FILE* file, int escopo) {
     }
     
     tokenValue = getNextToken(file);
-    compilaBloco(file, escopo);
+    compilaBloco(file, escopo+1);
     
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_PONTO) {
@@ -103,6 +148,8 @@ void compilaBloco(FILE* file, int escopo) {
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_TIPO) {
+            Token* categoriaSymbol = tokenValue; // Token "type", marca a categoria do símbolo
+
             tokenValue = getNextToken(file); // Pega o primeiro identificador
             
             do {
@@ -110,16 +157,23 @@ void compilaBloco(FILE* file, int escopo) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
                 
+                Token* nomeTipo = tokenValue; // Nome do novo tipo (ex: "jonas")
+                
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_IGUAL) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um igual");
                 }
                 
-                // Problema! Precisamos implementar tipos para a tabela de simbolos
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
+                
+                SymbolTipo naturezaResolvida;
+                Token* referenciaResolvida;
+                resolverTipoBase(tokenValue, &naturezaResolvida, &referenciaResolvida);
+                
+                adicionarSymbolTable(nomeTipo->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
                 
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -134,14 +188,24 @@ void compilaBloco(FILE* file, int escopo) {
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {   // Arrumar a virgula
+            Token* categoriaSymbol = tokenValue; // Token "var", marca a categoria do símbolo
+
             getNextToken(file);
             do {
+                Token* nomesVariaveis[MAX_VARIAVEIS_POR_DECLARACAO];
+                int totalNomes = 0;
+
                 do {
                     tokenValue = getCurrentToken();
                     
                     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                     }
+                    
+                    if (totalNomes >= MAX_VARIAVEIS_POR_DECLARACAO) {
+                        sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Excedeu o Número de Variáveis Permitido Numa Mesma Declaração");
+                    }
+                    nomesVariaveis[totalNomes++] = tokenValue; // Guarda o nome pra registrar depois do tipo
                     
                     tokenValue = getNextToken(file);
                     if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
@@ -154,10 +218,17 @@ void compilaBloco(FILE* file, int escopo) {
                 }
                 while(tokenValue->codigo != TOKEN_SYMB_DOISPONTOS);
                 
-                // Problema! Precisamos implementar tipos para a tabela de simbolos
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
+                }
+                
+                SymbolTipo naturezaResolvida;
+                Token* referenciaResolvida;
+                resolverTipoBase(tokenValue, &naturezaResolvida, &referenciaResolvida);
+                
+                for (int i = 0; i < totalNomes; i++) {
+                    adicionarSymbolTable(nomesVariaveis[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
                 }
                 
                 tokenValue = getNextToken(file);
@@ -173,12 +244,18 @@ void compilaBloco(FILE* file, int escopo) {
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_PROCEDIMENTO) {
+            Token* categoriaSymbol = tokenValue; // Token "procedure", marca a categoria do símbolo
+
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
+            // Registra o procedimento no escopo ATUAL (de fora), pra poder ser chamado
+            // por quem o declarou e por si mesmo (recursão), já que só é removido
+            // quando esse escopo de fora terminar.
+            adicionarSymbolTable(tokenValue->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
             
-            compilaParametrosFormais(file, escopo);
+            compilaParametrosFormais(file, escopo + 1); // Parâmetros pertencem ao escopo de dentro do bloco
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -187,6 +264,9 @@ void compilaBloco(FILE* file, int escopo) {
             
             getNextToken(file);
             compilaBloco(file, escopo + 1);
+            
+            // Saiu do bloco do procedimento: parâmetros e variáveis locais dele não existem mais.
+            removerEscopoSymbolTable((i8) (escopo + 1));
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -199,23 +279,33 @@ void compilaBloco(FILE* file, int escopo) {
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_FUNCAO) {
+            Token* categoriaSymbol = tokenValue; // Token "function", marca a categoria do símbolo
+
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
+            Token* nomeFuncao = tokenValue;
             
-            compilaParametrosFormais(file, escopo);
+            compilaParametrosFormais(file, escopo + 1); // Parâmetros pertencem ao escopo de dentro do bloco
             
             tokenValue = getCurrentToken(); // Pega o doispontos
             if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um doispontos");
             }
             
-            // Problema! Precisamos implementar tipos para a tabela de simbolos
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
+            
+            SymbolTipo naturezaResolvida;
+            Token* referenciaResolvida;
+            resolverTipoBase(tokenValue, &naturezaResolvida, &referenciaResolvida);
+            
+            // Registra a função no escopo ATUAL (de fora), assim como o procedimento,
+            // com o tipo de retorno já resolvido.
+            adicionarSymbolTable(nomeFuncao->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
             
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -224,6 +314,9 @@ void compilaBloco(FILE* file, int escopo) {
             
             getNextToken(file);
             compilaBloco(file, escopo + 1);
+            
+            // Saiu do bloco da função: parâmetros e variáveis locais dela não existem mais.
+            removerEscopoSymbolTable((i8) (escopo + 1));
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -264,14 +357,25 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
         tokenValue = getNextToken(file);
         
         if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL || tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
+            Token* categoriaSymbol = NULL; // NULL = parâmetro por valor (sem "var" na frente)
+
             if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {
+                categoriaSymbol = tokenValue; // Token "var"
                 tokenValue = getNextToken(file);
             }
+            
+            Token* nomesParametros[MAX_VARIAVEIS_POR_DECLARACAO];
+            int totalNomes = 0;
             
             do {
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
+                
+                if (totalNomes >= MAX_VARIAVEIS_POR_DECLARACAO) {
+                    sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Excedeu o Número de Parâmetros Permitido Num Mesmo Grupo");
+                }
+                nomesParametros[totalNomes++] = tokenValue;
                 
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
@@ -289,6 +393,14 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
             }
             
+            SymbolTipo naturezaResolvida;
+            Token* referenciaResolvida;
+            resolverTipoBase(tokenValue, &naturezaResolvida, &referenciaResolvida);
+            
+            for (int i = 0; i < totalNomes; i++) {
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+            }
+            
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula ou um fecha parenteses");
@@ -300,11 +412,20 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_FUNCAO) {
+            Token* categoriaSymbol = tokenValue; // Token "function"
+            Token* nomesParametros[MAX_VARIAVEIS_POR_DECLARACAO];
+            int totalNomes = 0;
+            
             do {
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
+                
+                if (totalNomes >= MAX_VARIAVEIS_POR_DECLARACAO) {
+                    sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Excedeu o Número de Parâmetros Permitido Num Mesmo Grupo");
+                }
+                nomesParametros[totalNomes++] = tokenValue;
                 
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
@@ -318,6 +439,14 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
             }
             
+            SymbolTipo naturezaResolvida;
+            Token* referenciaResolvida;
+            resolverTipoBase(tokenValue, &naturezaResolvida, &referenciaResolvida);
+            
+            for (int i = 0; i < totalNomes; i++) {
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+            }
+            
             tokenValue = getNextToken(file);
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula ou um fecha parenteses");
@@ -329,11 +458,20 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
         }
         
         if (tokenValue->codigo == TOKEN_KEYW_PROCEDIMENTO) {
+            Token* categoriaSymbol = tokenValue; // Token "procedure"
+            Token* nomesParametros[MAX_VARIAVEIS_POR_DECLARACAO];
+            int totalNomes = 0;
+            
             do {
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
                 }
+                
+                if (totalNomes >= MAX_VARIAVEIS_POR_DECLARACAO) {
+                    sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Excedeu o Número de Parâmetros Permitido Num Mesmo Grupo");
+                }
+                nomesParametros[totalNomes++] = tokenValue;
                 
                 tokenValue = getNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA &&
@@ -344,6 +482,11 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
                 }
             }
             while(tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
+            
+            // Parâmetros do tipo "procedure" não têm tipo de retorno: natureza fica desconhecida.
+            for (int i = 0; i < totalNomes; i++) {
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
+            }
             
             if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA) {
                 continue;
@@ -383,6 +526,8 @@ void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., fals
     tokenValue = getCurrentToken();
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) { // Atribuição, procedimento e função
+        verificarSymbolTable(tokenValue); // Garante que esse identificador foi declarado (e ainda está em escopo)
+        
         tokenValue = getNextToken(file);
         
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) { // Chamada Função
@@ -570,6 +715,8 @@ void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
     tokenValue = getCurrentToken();
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
+        verificarSymbolTable(tokenValue); // Garante que esse identificador foi declarado (e ainda está em escopo)
+        
         tokenValue = getNextToken(file); // Sneaky
         
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {

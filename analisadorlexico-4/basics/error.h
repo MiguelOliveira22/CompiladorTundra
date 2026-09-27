@@ -16,6 +16,8 @@ typedef enum {
 
     ERROR_UNKNOWN_TOKEN,
     ERROR_INVALID_TOKEN,
+    ERROR_UNDECLARED_IDENTIFIER,
+    ERROR_IDENTIFIER_ALREADY_DECLARED,
 } ErrorTipos;
 
 typedef struct {

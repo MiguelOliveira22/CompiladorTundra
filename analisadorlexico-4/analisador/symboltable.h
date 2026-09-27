@@ -20,5 +20,8 @@ typedef struct {
 extern Token symbolTiposDefinition[TYPE_BASE_INTEGER + 1];
 
 void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolTipo symbolNatureza, Token* referenciaNatureza, i8 symbolEscopo);
+SymbolGenerico* buscarSymbolTable(string symbolIdentificador);
+Token* buscarTokenTipoBase(string nomeTipo);
+void removerEscopoSymbolTable(i8 symbolEscopo);
 
 #endif

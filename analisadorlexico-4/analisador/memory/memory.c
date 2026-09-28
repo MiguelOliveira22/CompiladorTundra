@@ -7,6 +7,8 @@
 #include "lista.h"
 #include "tokenlexico.h"
 
+#include "memory.h"
+
 static Lista* identifiersToClose;
 static Lista* numbersToClose;
 

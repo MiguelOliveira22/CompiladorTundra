@@ -17,12 +17,6 @@ static void destruirPonteiros() {
         return;
     }
 
-    NoLista* atual = ponteirosParaDestruir->inicio;
-    while (atual != NULL) {
-
-        atual = atual->prox;
-    }
-
     destruirLista(ponteirosParaDestruir);
 }
 

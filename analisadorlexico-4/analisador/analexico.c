@@ -10,6 +10,7 @@
 
 static Token* storedToken = NULL;
 static ErrorPosition currentPosition = {0, 0};
+
 ErrorPosition filePosition = {0, 0};
 
 Token* getIdentifierValid(char* word) {

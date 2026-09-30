@@ -3,13 +3,10 @@
 
 #include "lista.h"
 
-/*
- * C -> Função para comparar elementos.
- * M -> Função para escrever elementos no print.
- * D -> Função para dealocar elementos.
- */
 void construirLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b), void (*m) (Elemento a), void (*d) (Elemento a)) {
     listaParaConstruir->inicio = NULL;
+    listaParaConstruir->fim = NULL;
+
     listaParaConstruir->count = 0;
 
     listaParaConstruir->comparar = c;
@@ -32,7 +29,9 @@ void destruirLista(Lista* listaParaDestruir) {
     }
 
     listaParaDestruir->count = 0;
+
     listaParaDestruir->inicio = NULL;
+    listaParaDestruir->fim = NULL;
 }
 
 bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento) {
@@ -113,24 +112,6 @@ Elemento buscarElementoLista(Lista* listaParaBuscar, Elemento buscarElemento) {
     }
 
     return NULL;
-}
-
-Elemento buscarElementoPorIndice(Lista* listaParaBuscar, int index) {
-    if (index < 0) {
-        return NULL;
-    }
-
-    NoLista* atual = listaParaBuscar->inicio;
-
-    if (index >= listaParaBuscar->count) {
-        return NULL;
-    }
-
-    for(int i = 0; i < index; i ++) {
-        atual = atual->prox;
-    }
-
-    return atual->info;
 }
 
 void printarLista(Lista* listaParaPrintar) {

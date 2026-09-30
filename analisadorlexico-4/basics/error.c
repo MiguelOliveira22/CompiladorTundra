@@ -22,7 +22,7 @@ static void destruirPonteiros() {
 
 void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
     if (ponteirosParaDestruir == NULL) {
-        ponteirosParaDestruir = (Lista*) malloc(sizeof(Lista));   // <-- faltava isso
+        ponteirosParaDestruir = (Lista*) malloc(sizeof(Lista));
         construirLista(ponteirosParaDestruir, NULL, NULL, NULL);
     }
 
@@ -41,7 +41,7 @@ void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a)) {
     novoNo->info = novoDado;
     novoNo->prox = NULL;
 
-    if (anterior == NULL) {                 // lista ainda vazia
+    if (anterior == NULL) {
         ponteirosParaDestruir->inicio = novoNo;
     } else {
         anterior->prox = novoNo;

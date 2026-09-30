@@ -103,12 +103,13 @@ void readNextToken(FILE* currentFile) {
     if (currentIdentifier == NULL) {
         sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
     }
-    associarPonteirosParaErros(currentIdentifier, NULL);        // Alterar nulo depois eu acho
+
+    associarPonteirosParaErros(currentIdentifier, NULL);
     memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
 
-    int c;
+    char c;
 
-    // 1) Pula espaços em branco e comentários "(* ... *)".
+    // Pular Espaços Branco e Comentário
     while (1) {
         c = fgetc(currentFile);
 
@@ -123,14 +124,14 @@ void readNextToken(FILE* currentFile) {
         }
 
         if (c == '(') {
-            int lookahead = fgetc(currentFile);
+            char lookahead = fgetc(currentFile);
 
             if (lookahead == '*') {
                 atualizarPosicao('(');
                 atualizarPosicao('*');
 
-                int anterior = 0;
-                int atual;
+                char anterior = 0;
+                char atual;
                 while (1) {
                     atual = fgetc(currentFile);
                     if (atual == EOF) {

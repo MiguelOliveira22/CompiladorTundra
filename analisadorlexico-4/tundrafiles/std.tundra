@@ -1,0 +1,17 @@
+program std(input, output); (* Biblioteca Padrão - Injeção de C posterior *)
+
+    procedure read(var readValue: integer): null; (* Definição Read *)
+
+    begin
+        (* Bloco Principal Read *)
+    end;
+
+    procedure write(var printValue: integer): null;
+
+    begin
+        (* Bloco Principal Print *)
+    end;
+
+begin
+    (* Injeção de C posterior *)
+end.

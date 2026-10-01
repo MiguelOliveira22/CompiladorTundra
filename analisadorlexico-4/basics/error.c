@@ -54,13 +54,13 @@ void sairErroTerminal(ErrorTipos erro, string message)
     destruirPonteiros();
 
     if (erro == ERROR_OK_OPERATION_SUCCESS) {
-        printf("OK Sucesso - %s", message);
+        printf("OK Sucesso - %s\n", message);
     }
     else if (strlen(message) > 0) {
-        printf("Erro %d - %s", erro, message);
+        printf("Erro %d - %s\n", erro, message);
     }
     else {
-        printf("Erro %d - Encerrando Execução", erro);
+        printf("Erro %d - Encerrando Execução\n", erro);
     }
 
     exit(erro);

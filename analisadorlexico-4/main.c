@@ -21,11 +21,6 @@ int main(int argc, char* argv[]) {
             sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Um Arquivo Não Pôde Ser Alocado");
         }
 
-        /*while (getCurrentToken() != &tokenEof) {
-            readNextToken(atualArquivoParaCompilar);
-            printf("[codigo=%d] %s\n", getCurrentToken()->codigo, getCurrentToken()->identificador);
-        }*/
-
         anasin(atualArquivoParaCompilar);
         sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa Interpretado Com Sucesso");
     }

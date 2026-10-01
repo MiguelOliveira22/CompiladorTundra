@@ -14,19 +14,19 @@ ErrorPosition filePosition = {0, 0};
 static Token* storedToken = NULL;
 static ErrorPosition currentPosition = {0, 0};
 
-static void atualizarPosicao(char currentChar) {
+static void atualizarPosicao(const char currentChar) {
     if (currentChar == '\n') {
-        filePosition.linha = 0;
-        filePosition.coluna ++;
+        filePosition.coluna = 0;
+        filePosition.linha ++;
     }
     else {
-        filePosition.linha ++;
+        filePosition.coluna ++;
     }
 }
 
 static Token* getIdentifierValid(char* word) {
     int wordSize = strlen(word);
-    if (wordSize == 0) { return false; }
+    if (wordSize == 0) { return NULL; }
     
     for (int i = 0; i < wordSize; i ++) {
         if (word[i] == '_' && i != 0) { continue; }
@@ -104,6 +104,32 @@ static Token* procurarDefinicao(const char* candidato, bool especial, int tamanh
     return NULL;
 }
 
+static Token* getToken(char* word) {
+    Token* bufferToken;
+
+    bufferToken = procurarDefinicao(word, false, strlen(word));
+    if (bufferToken != NULL) {
+        return bufferToken;
+    }
+
+    bufferToken = procurarDefinicao(word, true, strlen(word));
+    if (bufferToken != NULL) {
+        return bufferToken;
+    }
+
+    bufferToken = getIdentifierValid(word);
+    if (bufferToken != NULL) {
+        return bufferToken;
+    }
+
+    bufferToken = getNumericValid(word);
+    if (bufferToken != NULL) {
+        return bufferToken;
+    }
+
+    return &tokenInvalido;
+}
+
 static void findNextToken(FILE* currentFile) {
     string currentIdentifier = (string) malloc(CAP_SIZE_IDENTIFIER);
     if (currentIdentifier == NULL) {
@@ -113,68 +139,63 @@ static void findNextToken(FILE* currentFile) {
     associarPonteirosParaErros(currentIdentifier, NULL);
     memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
 
-    Token* bufferToken;
-    char anteriorChar;
-    char currentChar = NULL;
+    char currentChar = 0;
+
+
 
     while (true) {
-        anteriorChar = currentChar;
         currentChar = fgetc(currentFile);
 
-        if (feof(currentFile)) {
-            storedToken = &tokenEof;
-            return;
-        }
-
-        if (isspace(currentChar)) {
+        if (isspace(currentChar) || feof(currentFile)) {
             atualizarPosicao(currentChar);
+
+            if (strlen(currentIdentifier) > 0) {
+                storedToken = getToken(currentIdentifier);
+                return;
+            }
+
+            if (feof(currentFile)) {
+                storedToken = &tokenEof;
+                return;
+            }
+
             continue;
         }
 
-        char simples[] = { currentIdentifier[strlen(currentIdentifier) - 1], '\0' };
-        Token* foundSpecial = procurarDefinicao(simples, true, 1);
-        Token* foundSpecialDuplo;
+        char simples[2] = { currentChar, '\0' };
+        Token* foundSpecial;
 
-        if (isspace(anteriorChar) || foundSpecial != NULL) {
-            if (!isspace(anteriorChar)) {
-                // Lê mais um
-                char duplo[] = { currentIdentifier[ - 2], currentIdentifier[ - 1], '\0' };
-                foundSpecialDuplo = procurarDefinicao(duplo, true, 2);
-                if (foundSpecialDuplo != NULL && strlen(currentIdentifier) > 2) {
-                    // Devolve o segundo que pegou
+        foundSpecial = procurarDefinicao(simples, true, 1);
+        if (foundSpecial != NULL) {
+            char proximoChar = fgetc(currentFile);
+            char duplo[3] = { currentChar, proximoChar, '\0' };
+            Token* foundSpecialDuplo;
+
+            foundSpecialDuplo = procurarDefinicao(duplo, true, 2);
+            if (foundSpecialDuplo != NULL) {
+                foundSpecial = foundSpecialDuplo;
+            }
+
+            if (strlen(currentIdentifier) > 0) {
+                ungetc(proximoChar, currentFile);
+                ungetc(currentChar, currentFile);
+
+                storedToken = getToken(currentIdentifier);
+                return;
+            }
+            else {
+                if (foundSpecial == foundSpecialDuplo) {
+                    atualizarPosicao(proximoChar);
                 }
-            }
+                else {
+                    ungetc(proximoChar, currentFile);
+                }
 
-            if (strlen(currentIdentifier) == 2 && foundSpecialDuplo != NULL) {
-                return foundSpecialDuplo;
-            }
+                atualizarPosicao(currentChar);
 
-            if (strlen(currentIdentifier) == 1 && foundSpecial != NULL) {
-                return foundSpecial;
-            }
-
-            // Devolve o primeiro que pegou
-
-            bufferToken = procurarDefinicao(currentIdentifier, false, strlen(currentIdentifier));
-            if (bufferToken != NULL) {
-                storedToken = bufferToken;
+                storedToken = foundSpecial;
                 return;
             }
-
-            bufferToken = getIdentifierValid(currentIdentifier);
-            if (bufferToken != NULL) {
-                storedToken = bufferToken;
-                return;
-            }
-
-            bufferToken = getNumericValid(currentIdentifier);
-            if (bufferToken != NULL) {
-                storedToken = bufferToken;
-                return;
-            }
-
-            storedToken = &tokenInvalido;
-            return;
         }
 
         // Encontrou Conteúdo Útil
@@ -208,6 +229,8 @@ Token* readNextToken(FILE* currentFile) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Comentário Não Foi Fechado Antes do Fim do Arquivo");
                 }
             }
+
+            findNextToken(currentFile);
         }
 
         return getCurrentToken();

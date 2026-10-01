@@ -4,7 +4,7 @@ program programMain (input, output);
     var i, j: integer; ask, bask: boolean;
     type jonas = integer; pratt = boolean; parrea = nullable;
     
-    function matchLast(var i, j: integer; procedure p, q; function a, b: integer): integer;
+    function matchLast(var k, l: integer; procedure p, q; function a, b: integer): integer;
     
     begin
         100:

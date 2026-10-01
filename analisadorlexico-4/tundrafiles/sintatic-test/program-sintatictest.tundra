@@ -21,7 +21,7 @@ program programMain (input, output);
         200: y := 13;
         300: l := 14;
         
-        q[i, j, q, w] := 12 + 2 - 5 * 3 or 8 + 3;
+        q[i, j, q, i] := 12 + 2 - 5 * 3 or 8 + 3;
         
         matchLast(y, l);
         

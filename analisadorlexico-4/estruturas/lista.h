@@ -22,7 +22,8 @@ typedef struct {
 void construirLista(Lista* listaParaConstruir, int (*c) (Elemento a, Elemento b), void (*m) (Elemento a), void (*d) (Elemento a));
 void destruirLista(Lista* listaParaDestruir);
 
-bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento);
+bool inserirElementoNoFinalLista(Lista* listaParaInserir, Elemento adicionarElemento);
+bool inserirElementoEmOrdemLista(Lista* listaParaInserir, Elemento adicionarElemento);
 bool removerElementoLista(Lista* listaParaRemover, Elemento removerElemento);
 Elemento buscarElementoLista(Lista* listaParaBuscar, Elemento buscarElemento);
 void printarLista(Lista* listaParaPrintar);

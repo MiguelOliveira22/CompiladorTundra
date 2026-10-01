@@ -53,7 +53,10 @@ void sairErroTerminal(ErrorTipos erro, string message)
 {
     destruirPonteiros();
 
-    if (strlen(message) > 0) {
+    if (erro == ERROR_OK_OPERATION_SUCCESS) {
+        printf("OK Sucesso - %s", message);
+    }
+    else if (strlen(message) > 0) {
         printf("Erro %d - %s", erro, message);
     }
     else {

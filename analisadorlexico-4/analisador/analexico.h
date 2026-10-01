@@ -8,8 +8,7 @@
 
 #define CAP_SIZE_IDENTIFIER (36 * sizeof(char))
 
-void   readNextToken(FILE* currentFile);
 Token* getCurrentToken(void);
-Token* getNextToken(FILE* currentFile);
+Token* readNextToken(FILE* currentFile);
 
 #endif

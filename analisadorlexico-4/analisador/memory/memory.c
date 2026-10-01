@@ -9,6 +9,7 @@
 
 #include "memory.h"
 
+static Lista* stringsToClose;
 static Lista* identifiersToClose;
 static Lista* numbersToClose;
 
@@ -36,7 +37,7 @@ void cadastrarIdentifiersToClose(Token* identificador) {
         construirLista(identifiersToClose, compareIdentifiers, mostrarIdentifier, liberarIdentifier);
     }
 
-    inserirElementoLista(identifiersToClose, identificador);
+    inserirElementoEmOrdemLista(identifiersToClose, identificador);
 }
 
 void closeIdentifiers() {

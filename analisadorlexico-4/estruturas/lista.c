@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "lista.h"
@@ -34,7 +33,33 @@ void destruirLista(Lista* listaParaDestruir) {
     listaParaDestruir->fim = NULL;
 }
 
-bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento) {
+bool inserirElementoNoFinalLista(Lista* listaParaInserir, Elemento adicionarElemento) {
+    NoLista* novoNo = (NoLista*) malloc(sizeof(NoLista));
+    if (novoNo == NULL) {
+        return false;
+    }
+
+    novoNo->info = adicionarElemento;
+    novoNo->prox = NULL;
+
+    if (listaParaInserir->inicio == NULL) {
+        listaParaInserir->inicio = novoNo;
+    }
+    else {
+        listaParaInserir->fim->prox = novoNo;
+    }
+
+    listaParaInserir->fim = novoNo;
+
+    return true;
+}
+
+// Depende de função de comparação implementada
+bool inserirElementoEmOrdemLista(Lista* listaParaInserir, Elemento adicionarElemento) {
+    if (listaParaInserir->comparar == NULL) {
+        return false;
+    }
+
     NoLista* novoNo = (NoLista*) malloc(sizeof(NoLista));
     if (novoNo == NULL) {
         return false;
@@ -59,9 +84,14 @@ bool inserirElementoLista(Lista* listaParaInserir, Elemento adicionarElemento) {
 
     if (anterior == NULL) {
         listaParaInserir->inicio = novoNo;
+        listaParaInserir->fim = novoNo;
     }
     else {
         anterior->prox = novoNo;
+
+        if (anterior == listaParaInserir->fim) {
+            listaParaInserir->fim = novoNo;
+        }
     }
 
     novoNo->prox = atual;
@@ -78,6 +108,10 @@ bool removerElementoLista(Lista* listaParaRemover, Elemento removerElemento) {
         if ((listaParaRemover->comparar) (removerElemento, atual->info) == 0) {
             if (anterior == NULL) {
                 listaParaRemover->inicio = atual->prox;
+            }
+            else if (atual == listaParaRemover->fim) {
+                listaParaRemover->fim = anterior;
+                anterior->prox = NULL;
             }
             else {
                 anterior->prox = atual->prox;

@@ -8,12 +8,23 @@
 #include "tokenlexico.h"
 #include "analexico.h"
 
+// Posição Leitura Global
+ErrorPosition filePosition = {0, 0};
+
 static Token* storedToken = NULL;
 static ErrorPosition currentPosition = {0, 0};
 
-ErrorPosition filePosition = {0, 0};
+static void atualizarPosicao(char currentChar) {
+    if (currentChar == '\n') {
+        filePosition.linha = 0;
+        filePosition.coluna ++;
+    }
+    else {
+        filePosition.linha ++;
+    }
+}
 
-Token* getIdentifierValid(char* word) {
+static Token* getIdentifierValid(char* word) {
     int wordSize = strlen(word);
     if (wordSize == 0) { return false; }
     
@@ -41,7 +52,7 @@ Token* getIdentifierValid(char* word) {
     return identifier;
 }
 
-Token* getNumericValid(char* word) {
+static Token* getNumericValid(char* word) {
     int wordSize = strlen(word);
     
     if (wordSize == 0) { return NULL; }
@@ -59,7 +70,7 @@ Token* getNumericValid(char* word) {
     Token* identifier = (Token*) malloc(sizeof(Token));
 
     if (identifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "getNumericValid não pôde alocar memória.");
     }
 
     identifier->codigo = TOKEN_OPER_NUMERO;
@@ -71,34 +82,29 @@ Token* getNumericValid(char* word) {
     return identifier;
 }
 
-// Atualiza o rastreamento de posição (linha/coluna) para o caractere consumido.
-// Mantive a mesma convenção de campos que já existia (linha zera e coluna incrementa
-// a cada '\n'; linha incrementa nos demais casos).
-static void atualizarPosicao(char c) {
-    if (c == '\n') {
-        filePosition.linha = 0;
-        filePosition.coluna += 1;
-    }
-    else {
-        filePosition.linha += 1;
-    }
-}
-
 // Tenta casar 'candidato' contra as definições de token, filtrando por tokenEspecial
 // (false = palavra-chave/operador-palavra, true = símbolo) e por tamanho exato.
-static Token* casarDefinicao(const char* candidato, bool especial, int tamanho) {
-    for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i++) {
-        if (tokenDefinitions[i].tokenEspecial == especial &&
-            strlen(tokenDefinitions[i].identificador) == tamanho &&
-            strcmp(candidato, tokenDefinitions[i].identificador) == 0)
-        {
-            return &tokenDefinitions[i];
+static Token* procurarDefinicao(const char* candidato, bool especial, int tamanho) {
+    for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
+        if (tokenDefinitions[i].tokenEspecial != especial) {
+            continue;
         }
+
+        if (strlen(tokenDefinitions[i].identificador) != tamanho) {
+            continue;
+        }
+
+        if (strcmp(candidato, tokenDefinitions[i].identificador) != 0) {
+            continue;
+        }
+
+        return &tokenDefinitions[i];
     }
+
     return NULL;
 }
 
-void readNextToken(FILE* currentFile) {
+static void findNextToken(FILE* currentFile) {
     string currentIdentifier = (string) malloc(CAP_SIZE_IDENTIFIER);
     if (currentIdentifier == NULL) {
         sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
@@ -107,155 +113,103 @@ void readNextToken(FILE* currentFile) {
     associarPonteirosParaErros(currentIdentifier, NULL);
     memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
 
-    char c;
+    Token* bufferToken;
+    char anteriorChar;
+    char currentChar = NULL;
 
-    // Pular Espaços Branco e Comentário
-    while (1) {
-        c = fgetc(currentFile);
+    while (true) {
+        anteriorChar = currentChar;
+        currentChar = fgetc(currentFile);
 
-        if (c == EOF) {
+        if (feof(currentFile)) {
             storedToken = &tokenEof;
             return;
         }
 
-        if (isspace(c)) {
-            atualizarPosicao((char) c);
+        if (isspace(currentChar)) {
+            atualizarPosicao(currentChar);
             continue;
         }
 
-        if (c == '(') {
-            char lookahead = fgetc(currentFile);
+        char simples[] = { currentIdentifier[strlen(currentIdentifier) - 1], '\0' };
+        Token* foundSpecial = procurarDefinicao(simples, true, 1);
+        Token* foundSpecialDuplo;
 
-            if (lookahead == '*') {
-                atualizarPosicao('(');
-                atualizarPosicao('*');
-
-                char anterior = 0;
-                char atual;
-                while (1) {
-                    atual = fgetc(currentFile);
-                    if (atual == EOF) {
-                        sairErroTerminal(ERROR_INVALID_TOKEN, "Comentário Não Foi Fechado Antes do Fim do Arquivo");
-                    }
-                    atualizarPosicao((char) atual);
-                    if (anterior == '*' && atual == ')') {
-                        break;
-                    }
-                    anterior = atual;
+        if (isspace(anteriorChar) || foundSpecial != NULL) {
+            if (!isspace(anteriorChar)) {
+                // Lê mais um
+                char duplo[] = { currentIdentifier[ - 2], currentIdentifier[ - 1], '\0' };
+                foundSpecialDuplo = procurarDefinicao(duplo, true, 2);
+                if (foundSpecialDuplo != NULL && strlen(currentIdentifier) > 2) {
+                    // Devolve o segundo que pegou
                 }
-                continue; // volta a procurar o próximo token de verdade
             }
 
-            if (lookahead != EOF) {
-                ungetc(lookahead, currentFile);
+            if (strlen(currentIdentifier) == 2 && foundSpecialDuplo != NULL) {
+                return foundSpecialDuplo;
             }
-        }
 
-        break; // 'c' é o primeiro caractere de um token de verdade
-    }
-
-    currentPosition.linha = filePosition.linha;
-    currentPosition.coluna = filePosition.coluna;
-
-    // 2) Identificador ou palavra-chave (and/or/not incluídos, pois não são "especiais").
-    if (isalpha(c)) {
-        int tamanho = 0;
-        currentIdentifier[tamanho++] = (char) c;
-        atualizarPosicao((char) c);
-
-        int prox;
-        while ((prox = fgetc(currentFile)) != EOF && (isalnum(prox) || prox == '_')) {
-            if (tamanho + 1 >= CAP_SIZE_IDENTIFIER) {
-                sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
+            if (strlen(currentIdentifier) == 1 && foundSpecial != NULL) {
+                return foundSpecial;
             }
-            currentIdentifier[tamanho++] = (char) prox;
-            atualizarPosicao((char) prox);
-        }
-        currentIdentifier[tamanho] = '\0';
-        if (prox != EOF) {
-            ungetc(prox, currentFile);
-        }
 
-        Token* palavraChave = casarDefinicao(currentIdentifier, false, tamanho);
-        if (palavraChave != NULL) {
-            storedToken = palavraChave;
+            // Devolve o primeiro que pegou
+
+            bufferToken = procurarDefinicao(currentIdentifier, false, strlen(currentIdentifier));
+            if (bufferToken != NULL) {
+                storedToken = bufferToken;
+                return;
+            }
+
+            bufferToken = getIdentifierValid(currentIdentifier);
+            if (bufferToken != NULL) {
+                storedToken = bufferToken;
+                return;
+            }
+
+            bufferToken = getNumericValid(currentIdentifier);
+            if (bufferToken != NULL) {
+                storedToken = bufferToken;
+                return;
+            }
+
+            storedToken = &tokenInvalido;
             return;
         }
 
-        Token* identificador = getIdentifierValid(currentIdentifier);
-        if (identificador != NULL) {
-            storedToken = identificador;
-            return;
+        // Encontrou Conteúdo Útil
+
+        currentPosition.linha = filePosition.linha;
+        currentPosition.coluna = filePosition.coluna;
+
+        int tamanho = strlen(currentIdentifier);
+        if (tamanho + 1 >= CAP_SIZE_IDENTIFIER) {
+            sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
         }
 
-        storedToken = &tokenInvalido;
-        return;
+        currentIdentifier[tamanho] = currentChar;
+        atualizarPosicao(currentChar);
     }
-
-    // 3) Número.
-    if (isdigit(c)) {
-        int tamanho = 0;
-        currentIdentifier[tamanho++] = (char) c;
-        atualizarPosicao((char) c);
-
-        int prox;
-        while ((prox = fgetc(currentFile)) != EOF && isdigit(prox)) {
-            if (tamanho + 1 >= CAP_SIZE_IDENTIFIER) {
-                sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
-            }
-            currentIdentifier[tamanho++] = (char) prox;
-            atualizarPosicao((char) prox);
-        }
-        currentIdentifier[tamanho] = '\0';
-        if (prox != EOF) {
-            ungetc(prox, currentFile);
-        }
-
-        Token* numero = getNumericValid(currentIdentifier);
-        if (numero != NULL) {
-            storedToken = numero;
-            return;
-        }
-
-        storedToken = &tokenInvalido;
-        return;
-    }
-
-    // 4) Símbolo: tenta achar um de 2 caracteres primeiro (ex: ":=", "<="), senão de 1.
-    char doisCaracteres[3] = { (char) c, '\0', '\0' };
-    int segundo = fgetc(currentFile);
-
-    if (segundo != EOF) {
-        doisCaracteres[1] = (char) segundo;
-
-        Token* simboloDuplo = casarDefinicao(doisCaracteres, true, 2);
-        if (simboloDuplo != NULL) {
-            atualizarPosicao((char) c);
-            atualizarPosicao((char) segundo);
-            storedToken = simboloDuplo;
-            return;
-        }
-
-        ungetc(segundo, currentFile);
-    }
-
-    char umCaractere[2] = { (char) c, '\0' };
-    Token* simboloUnico = casarDefinicao(umCaractere, true, 1);
-    atualizarPosicao((char) c);
-
-    if (simboloUnico != NULL) {
-        storedToken = simboloUnico;
-        return;
-    }
-
-    storedToken = &tokenInvalido;
 }
 
 Token* getCurrentToken() {
     return storedToken;
 }
 
-Token* getNextToken(FILE* currentFile){
-    readNextToken(currentFile);
-    return getCurrentToken();
+Token* readNextToken(FILE* currentFile) {
+    while (true) {
+        findNextToken(currentFile);
+
+        if (storedToken->codigo == TOKEN_SYMB_ABRECOMENTARIO) {
+            while (storedToken->codigo != TOKEN_SYMB_FECHACOMENTARIO) {
+                findNextToken(currentFile);
+
+                if (storedToken->codigo == TOKEN_OPER_EOF) {
+                    sairErroTerminal(ERROR_INVALID_TOKEN, "Comentário Não Foi Fechado Antes do Fim do Arquivo");
+                }
+            }
+        }
+
+        return getCurrentToken();
+    }
 }

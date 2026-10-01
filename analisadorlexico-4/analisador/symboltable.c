@@ -67,8 +67,8 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolT
     novoSymbol->symbolEscopo = symbolEscopo;
 
     // Se já existir um símbolo com o mesmo identificador, a lista recusa a inserção
-    // (inserirElementoLista retorna false) e simplesmente ignoramos o novo símbolo.
-    if (!inserirElementoLista(symbolTableContents, novoSymbol)) {
+    // (inserirElementoEmOrdemLista retorna false) e simplesmente ignoramos o novo símbolo.
+    if (!inserirElementoEmOrdemLista(symbolTableContents, novoSymbol)) {
         free(novoSymbol);
 
         char mensagemErro[96];

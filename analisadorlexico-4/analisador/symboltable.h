@@ -23,7 +23,8 @@ typedef enum {
 typedef struct {
     string symbolIdentificador;
     Token* symbolCategoria;
-    Token* symbolTipo;
+    SymbolTipo symbolTipo;
+    Token* referenciaNatureza;
     i8 symbolEscopo;
 
     Lista* symbolParameters;
@@ -32,7 +33,7 @@ typedef struct {
 extern Token symbolTiposDefinition[TYPE_BASE_BOOLEAN + 1];
 extern Lista* customTiposDefinition;
 
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolTipo symbolCategoria, Token* referenciaNatureza, i8 symbolEscopo);
+void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, i8 symbolEscopo);
 SymbolGenerico* buscarSymbolTable(string symbolIdentificador);
 Token* buscarTokenTipoBase(string nomeTipo);
 void removerEscopoSymbolTable(i8 symbolEscopo);

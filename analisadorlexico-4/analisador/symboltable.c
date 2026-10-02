@@ -9,9 +9,9 @@
 #include "error.h"
 
 Token symbolTiposDefinition[] = {
-    { TYPE_BASE_NULL,            "null",    false },
-    { TYPE_BASE_INTEGER,         "integer", false },
-    { TYPE_BASE_BOOLEAN,         "boolean", false },
+    { (TokenTipo) TYPE_BASE_NULL,    "null",    false },
+    { (TokenTipo) TYPE_BASE_INTEGER, "integer", false },
+    { (TokenTipo) TYPE_BASE_BOOLEAN, "boolean", false },
 };
 
 static Lista* symbolTableContents = NULL;
@@ -29,7 +29,7 @@ static void mostrarSymbol(Elemento a) {
     printf(
         "[ID] %s;\t[TIPO] %s;\t[CATEG] %s;\n[ESCOPO] %d;\n[PARAMS] ",
         symbol->symbolIdentificador,
-        symbol->symbolTipo != NULL ? symbol->symbolTipo->identificador : "?",
+        symbol->referenciaNatureza != NULL ? symbol->referenciaNatureza->identificador : "?",
         symbol->symbolCategoria != NULL ? symbol->symbolCategoria->identificador : "?",
         symbol->symbolEscopo
     );
@@ -39,7 +39,7 @@ static void destruirSymbol(Elemento a) {
     free(a);
 }
 
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolCategoria symbolCategoria, i8 symbolEscopo) {
+void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, i8 symbolEscopo) {
     if (symbolTableContents == NULL) {
         symbolTableContents = (Lista*) malloc(sizeof(Lista));
         
@@ -56,8 +56,9 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolC
     }
 
     novoSymbol->symbolIdentificador = symbolIdentificador;
-    novoSymbol->symbolTipo = symbolTipo;
     novoSymbol->symbolCategoria = symbolCategoria;
+    novoSymbol->symbolTipo = symbolTipo;
+    novoSymbol->referenciaNatureza = referenciaNatureza;
     novoSymbol->symbolEscopo = symbolEscopo;
 
     novoSymbol->symbolParameters = NULL;
@@ -76,7 +77,7 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolC
     printf(
         "[symtable] + '%s' (categoria=%s, natureza=%s, escopo=%d)\n",
         novoSymbol->symbolIdentificador,
-        novoSymbol->symbolTipo != NULL ? novoSymbol->symbolTipo->identificador : "?",
+        novoSymbol->symbolCategoria != NULL ? novoSymbol->symbolCategoria->identificador : "?",
         novoSymbol->referenciaNatureza != NULL ? novoSymbol->referenciaNatureza->identificador : "desconhecido",
         novoSymbol->symbolEscopo
     );

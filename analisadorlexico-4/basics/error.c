@@ -8,6 +8,8 @@
 void sairErroTerminal(ErrorTipos erro, string message)
 {
     closePonteiros();
+    closeStrings();
+    closeIdentifiers();
 
     if (erro == ERROR_OK_OPERATION_SUCCESS) {
         printf("OK Sucesso - %s\n", message);

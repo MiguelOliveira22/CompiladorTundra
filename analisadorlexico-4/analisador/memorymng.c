@@ -112,22 +112,20 @@ void closePonteiros() {
     }
 
     NoLista* atual = ponteirosToClose->inicio;
-    NoLista* anterior = NULL;
+    while (atual != NULL) {
+        NoLista* proximo = atual->prox;
+        PonteiroDestrutivel* item = (PonteiroDestrutivel*) atual->info;
 
-    while (atual != NULL)
-    {
-        if (anterior != NULL) {
-            if (((PonteiroDestrutivel*) anterior->info)->d != NULL) {
-                ((PonteiroDestrutivel*) anterior->info)->d(anterior->info);
-            }
-            
-            free(anterior);
+        if (item->d != NULL) {
+            item->d(item->dados);
         }
 
-        anterior = atual;
-        atual = atual->prox;
+        free(item);
+        free(atual);
+        atual = proximo;
     }
 
-    ((PonteiroDestrutivel*) anterior->info)->d(anterior->info);
-    free(anterior);
+    ponteirosToClose->inicio = NULL;
+    ponteirosToClose->fim = NULL;
+    ponteirosToClose->count = 0;
 }

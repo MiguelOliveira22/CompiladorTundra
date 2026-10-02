@@ -7,6 +7,7 @@
 #include "tokenlexico.h"
 #include "error.h"
 #include "basics.h"
+#include "anasintatico.h"
 
 static void compilaPrograma(FILE* file, int escopo);
 static void compilaBloco(FILE* file, int escopo);
@@ -17,8 +18,6 @@ static void compilaExpressao(FILE* file, int escopo);
 static void compilaExpressaoSimples(FILE* file, int escopo);
 static void compilaTermo(FILE* file, int escopo);
 static void compilaFator(FILE* file, int escopo);
-
-#define MAX_VARIAVEIS_POR_DECLARACAO 64
 
 // Resolve o "tipo base" (natureza) de um identificador de tipo usado numa declaração:
 // 1) Primeiro tenta achar entre os tipos-base conhecidos (symbolTiposDefinition: null/integer);
@@ -36,13 +35,12 @@ void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** r
     SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador);
 
     if (aliasEncontrado != NULL) {
-        *naturezaResolvida = aliasEncontrado->symbolCategoria;
+        *naturezaResolvida = aliasEncontrado->symbolTipo;
         *referenciaResolvida = aliasEncontrado->referenciaNatureza;
         return;
     }
 
-    *naturezaResolvida = TYPE_BASE_NULL;
-    *referenciaResolvida = NULL;
+    sairErroTerminal(ERROR_UNKNOWN_TYPE, "O Tipo Não Pôde Ser Determinado, Verifique Novamente");
 }
 
 // Verifica se um identificador usado (variável, parâmetro, procedimento ou função sendo
@@ -191,8 +189,8 @@ void compilaBloco(FILE* file, int escopo) {
             continue;
         }
         
-        if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {   // Arrumar a virgula
-            Token* categoriaSymbol = tokenValue; // Token "var", marca a categoria do símbolo
+        if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {
+            Token* categoriaSymbol = tokenValue;
 
             readNextToken(file);
             do {
@@ -506,7 +504,7 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
     }
 }
 
-void compilaComando(FILE* file, int escopo) { // NEXT: analex(..., false);
+void compilaComando(FILE* file, int escopo) {
     Token* tokenValue;
     
     tokenValue = readNextToken(file);
@@ -524,7 +522,7 @@ void compilaComando(FILE* file, int escopo) { // NEXT: analex(..., false);
     compilaComandoSemRotulo(file, escopo);
 }
 
-void compilaComandoSemRotulo(FILE* file, int escopo) { // NEXT: analex(..., false);
+void compilaComandoSemRotulo(FILE* file, int escopo) {
     Token* tokenValue;
     
     tokenValue = getCurrentToken();

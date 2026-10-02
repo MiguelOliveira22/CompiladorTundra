@@ -16,8 +16,7 @@ typedef enum {
     CATG_BASE_TIPO,
     CATG_BASE_ROTULO,
     CATG_BASE_PROCEDIMENTO,
-    CATG_BASE_FUNCAO,
-    CATG_BASE_PARAMETRO_CHAMADA
+    CATG_BASE_FUNCAO
 } SymbolCategoria;
 
 typedef struct SymbolParametro {

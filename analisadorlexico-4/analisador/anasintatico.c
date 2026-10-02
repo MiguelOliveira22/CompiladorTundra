@@ -22,11 +22,16 @@ static SymbolTipo compilaTermo(FILE* file, int escopo);
 static SymbolTipo compilaFator(FILE* file, int escopo);
 
 static void adicionarParametro(SymbolGenerico* assinatura, SymbolTipo tipo) {
-    if (assinatura == NULL) return;
+    if (assinatura == NULL) { return; }
+
     SymbolParametro* novo = (SymbolParametro*) malloc(sizeof(SymbolParametro));
-    if (novo == NULL) sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não foi possível alocar a assinatura da função");
+    if (novo == NULL) {
+        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não foi possível alocar a assinatura da função");
+    }
+
     novo->tipo = tipo;
     novo->proximo = NULL;
+
     SymbolParametro** fim = &assinatura->symbolParameters;
     while (*fim != NULL) fim = &(*fim)->proximo;
     *fim = novo;
@@ -385,7 +390,8 @@ void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura
         tokenValue = readNextToken(file);
         
         if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL || tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
-            Token* categoriaSymbol = NULL; // NULL = parâmetro por valor (sem "var" na frente)
+            // Pela regra desta linguagem, parâmetros tipados sem "var" também são por referência.
+            Token* categoriaSymbol = &tokenDefinitions[TOKEN_KEYW_VARIAVEL];
 
             if (tokenValue->codigo == TOKEN_KEYW_VARIAVEL) {
                 categoriaSymbol = tokenValue; // Token "var"
@@ -550,11 +556,7 @@ static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
     }
 
     if (tokenValue->codigo == TOKEN_SYMB_FECHAPARENTESES) {
-        if (chamavel && parametro != NULL) {
-            sairErroTerminal(ERROR_ARGUMENT_COUNT, "A sub-rotina exige argumentos conforme sua declaração");
-        }
-        readNextToken(file);
-        return;
+        sairErroTerminal(ERROR_INVALID_CALL, "A lista de argumentos não pode estar vazia; omita os parênteses quando a sub-rotina não tiver parâmetros");
     }
 
     while (true) {
@@ -775,12 +777,14 @@ static SymbolTipo compilaExpressaoSimples(FILE* file, int escopo) {
         if (tokenValue->codigo == TOKEN_SYMB_MAIS || tokenValue->codigo == TOKEN_SYMB_MENOS) {
             exigirTipo(tipo, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             readNextToken(file);
-            exigirTipo(compilaTermo(file, escopo), TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
+            SymbolTipo tipoDireito = compilaTermo(file, escopo);
+            exigirTipo(tipoDireito, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             tipo = TYPE_BASE_INTEGER;
         } else if (tokenValue->codigo == TOKEN_SYMB_OU) {
             exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
             readNextToken(file);
-            exigirTipo(compilaTermo(file, escopo), TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
+            SymbolTipo tipoDireito = compilaTermo(file, escopo);
+            exigirTipo(tipoDireito, TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
             tipo = TYPE_BASE_BOOLEAN;
         } else {
             return tipo;
@@ -796,12 +800,14 @@ static SymbolTipo compilaTermo(FILE* file, int escopo) {
         if (tokenValue->codigo == TOKEN_SYMB_VEZES || tokenValue->codigo == TOKEN_SYMB_DIVIDIR) {
             exigirTipo(tipo, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             readNextToken(file);
-            exigirTipo(compilaFator(file, escopo), TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
+            SymbolTipo tipoDireito = compilaFator(file, escopo);
+            exigirTipo(tipoDireito, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             tipo = TYPE_BASE_INTEGER;
         } else if (tokenValue->codigo == TOKEN_SYMB_E) {
             exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
             readNextToken(file);
-            exigirTipo(compilaFator(file, escopo), TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
+            SymbolTipo tipoDireito = compilaFator(file, escopo);
+            exigirTipo(tipoDireito, TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
             tipo = TYPE_BASE_BOOLEAN;
         } else {
             return tipo;

@@ -10,7 +10,7 @@ program exemplo12(input,output); (* 0 *)
         
         function f(z: integer): integer; (* 2 *)
         begin
-            if z<0 
+            if (z<0) and b
             then goto 200
             else
                 if z=0 then f:=2

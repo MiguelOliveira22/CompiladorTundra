@@ -211,8 +211,6 @@ static void findNextToken(FILE* currentFile) {
 
         currentIdentifier[tamanho] = currentChar;
         atualizarPosicao(currentChar);
-
-        printf("%d - %s\n", tamanho + 1, currentIdentifier);
     }
 }
 

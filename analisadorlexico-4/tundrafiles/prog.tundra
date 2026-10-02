@@ -1,5 +1,6 @@
 program exemplo12(input,output); (* 0 *)
 
+    var b: boolean;
     var x: integer; (* 1 *)
 
     procedure p(var t: integer); (* 1 *)

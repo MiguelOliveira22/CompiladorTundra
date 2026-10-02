@@ -36,7 +36,14 @@ static void mostrarSymbol(Elemento a) {
 }
 
 static void destruirSymbol(Elemento a) {
-    free(a);
+    SymbolGenerico* symbol = (SymbolGenerico*) a;
+    SymbolParametro* parametro = symbol->symbolParameters;
+    while (parametro != NULL) {
+        SymbolParametro* proximo = parametro->proximo;
+        free(parametro);
+        parametro = proximo;
+    }
+    free(symbol);
 }
 
 void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, i8 symbolEscopo) {

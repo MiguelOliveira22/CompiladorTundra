@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -11,13 +12,33 @@
 
 static void compilaPrograma(FILE* file, int escopo);
 static void compilaBloco(FILE* file, int escopo);
-static void compilaParametrosFormais(FILE* file, int escopo);
+static void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura);
 static void compilaComando(FILE* file, int escopo);
 static void compilaComandoSemRotulo(FILE* file, int escopo);
-static void compilaExpressao(FILE* file, int escopo);
-static void compilaExpressaoSimples(FILE* file, int escopo);
-static void compilaTermo(FILE* file, int escopo);
-static void compilaFator(FILE* file, int escopo);
+static SymbolTipo compilaExpressao(FILE* file, int escopo);
+static SymbolTipo compilaExpressaoAtual(FILE* file, int escopo);
+static SymbolTipo compilaExpressaoSimples(FILE* file, int escopo);
+static SymbolTipo compilaTermo(FILE* file, int escopo);
+static SymbolTipo compilaFator(FILE* file, int escopo);
+
+static void adicionarParametro(SymbolGenerico* assinatura, SymbolTipo tipo) {
+    if (assinatura == NULL) return;
+    SymbolParametro* novo = (SymbolParametro*) malloc(sizeof(SymbolParametro));
+    if (novo == NULL) sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não foi possível alocar a assinatura da função");
+    novo->tipo = tipo;
+    novo->proximo = NULL;
+    SymbolParametro** fim = &assinatura->symbolParameters;
+    while (*fim != NULL) fim = &(*fim)->proximo;
+    *fim = novo;
+}
+
+static void exigirTipo(SymbolTipo atual, SymbolTipo esperado, const char* contexto) {
+    if (atual != esperado) sairErroTerminal(ERROR_TYPE_MISMATCH, (string) contexto);
+}
+
+static bool simboloDaCategoria(SymbolGenerico* symbol, TokenTipo categoria) {
+    return symbol != NULL && symbol->symbolCategoria != NULL && symbol->symbolCategoria->codigo == categoria;
+}
 
 // Resolve o "tipo base" (natureza) de um identificador de tipo usado numa declaração:
 // 1) Primeiro tenta achar entre os tipos-base conhecidos (symbolTiposDefinition: null/integer);
@@ -256,8 +277,9 @@ void compilaBloco(FILE* file, int escopo) {
             // por quem o declarou e por si mesmo (recursão), já que só é removido
             // quando esse escopo de fora terminar.
             adicionarSymbolTable(tokenValue->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
+            SymbolGenerico* simboloProcedimento = buscarSymbolTable(tokenValue->identificador);
             
-            compilaParametrosFormais(file, escopo + 1); // Parâmetros pertencem ao escopo de dentro do bloco
+            compilaParametrosFormais(file, escopo + 1, simboloProcedimento); // Parâmetros pertencem ao escopo de dentro do bloco
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -288,8 +310,11 @@ void compilaBloco(FILE* file, int escopo) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
             }
             Token* nomeFuncao = tokenValue;
+
+            adicionarSymbolTable(nomeFuncao->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
+            SymbolGenerico* simboloFuncao = buscarSymbolTable(nomeFuncao->identificador);
             
-            compilaParametrosFormais(file, escopo + 1); // Parâmetros pertencem ao escopo de dentro do bloco
+            compilaParametrosFormais(file, escopo + 1, simboloFuncao); // Parâmetros pertencem ao escopo de dentro do bloco
             
             tokenValue = getCurrentToken(); // Pega o doispontos
             if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
@@ -307,7 +332,8 @@ void compilaBloco(FILE* file, int escopo) {
             
             // Registra a função no escopo ATUAL (de fora), assim como o procedimento,
             // com o tipo de retorno já resolvido.
-            adicionarSymbolTable(nomeFuncao->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+            simboloFuncao->symbolTipo = naturezaResolvida;
+            simboloFuncao->referenciaNatureza = referenciaResolvida;
             
             tokenValue = readNextToken(file);
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -347,7 +373,7 @@ void compilaBloco(FILE* file, int escopo) {
     }
 }
 
-void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., true);
+void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura) { // NEXT: analex(..., true);
     Token* tokenValue;
     
     tokenValue = readNextToken(file);
@@ -401,6 +427,7 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
             
             for (int i = 0; i < totalNomes; i++) {
                 adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+                adicionarParametro(assinatura, naturezaResolvida);
             }
             
             tokenValue = readNextToken(file);
@@ -447,6 +474,7 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
             
             for (int i = 0; i < totalNomes; i++) {
                 adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+                adicionarParametro(assinatura, TYPE_BASE_NULL);
             }
             
             tokenValue = readNextToken(file);
@@ -488,6 +516,7 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
             // Parâmetros do tipo "procedure" não têm tipo de retorno: natureza fica desconhecida.
             for (int i = 0; i < totalNomes; i++) {
                 adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
+                adicionarParametro(assinatura, TYPE_BASE_NULL);
             }
             
             if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA) {
@@ -502,6 +531,57 @@ void compilaParametrosFormais(FILE* file, int escopo) { // NEXT: analex(..., tru
         
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se [VAR], [FUNC], [PROC] ou [ID]");
     }
+}
+
+static bool ehBuiltinIO(SymbolGenerico* symbol) {
+    return symbol != NULL &&
+        (strcmp(symbol->symbolIdentificador, "read") == 0 || strcmp(symbol->symbolIdentificador, "write") == 0);
+}
+
+static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
+    Token* tokenValue = readNextToken(file); /* primeiro argumento ou ')' */
+    SymbolParametro* parametro = funcao->symbolParameters;
+    bool builtinIO = ehBuiltinIO(funcao);
+    bool chamavel = simboloDaCategoria(funcao, TOKEN_KEYW_FUNCAO) ||
+        simboloDaCategoria(funcao, TOKEN_KEYW_PROCEDIMENTO);
+
+    if (!chamavel && !builtinIO) {
+        sairErroTerminal(ERROR_INVALID_CALL, "Este identificador não declara uma função ou procedimento chamável");
+    }
+
+    if (tokenValue->codigo == TOKEN_SYMB_FECHAPARENTESES) {
+        if (chamavel && parametro != NULL) {
+            sairErroTerminal(ERROR_ARGUMENT_COUNT, "A sub-rotina exige argumentos conforme sua declaração");
+        }
+        readNextToken(file);
+        return;
+    }
+
+    while (true) {
+        SymbolTipo tipoArgumento = compilaExpressaoAtual(file, escopo);
+        tokenValue = getCurrentToken();
+
+        if (!builtinIO) {
+            if (parametro == NULL) {
+                sairErroTerminal(ERROR_ARGUMENT_COUNT, "A chamada recebeu mais argumentos do que a sub-rotina declara");
+            }
+            if (tipoArgumento != parametro->tipo) {
+                sairErroTerminal(ERROR_TYPE_MISMATCH, "O tipo deste argumento não corresponde ao parâmetro declarado");
+            }
+            parametro = parametro->proximo;
+        }
+
+        if (tokenValue->codigo == TOKEN_SYMB_FECHAPARENTESES) break;
+        if (tokenValue->codigo != TOKEN_SYMB_VIRGULA) {
+            sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se vírgula ou fecha parênteses após o argumento da função");
+        }
+        readNextToken(file);
+    }
+
+    if (!builtinIO && parametro != NULL) {
+        sairErroTerminal(ERROR_ARGUMENT_COUNT, "A chamada recebeu menos argumentos do que a sub-rotina declara");
+    }
+    readNextToken(file);
 }
 
 void compilaComando(FILE* file, int escopo) {
@@ -529,28 +609,21 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) { // Atribuição, procedimento e função
         verificarSymbolTable(tokenValue); // Garante que esse identificador foi declarado (e ainda está em escopo)
+        SymbolGenerico* simboloAtual = buscarSymbolTable(tokenValue->identificador);
+        bool chamadaComParenteses = false;
         
         tokenValue = readNextToken(file);
         
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) { // Chamada Função
-            do {
-                compilaExpressao(file, escopo);
-                
-                tokenValue = getCurrentToken();
-                
-                if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES && tokenValue->codigo != TOKEN_SYMB_VIRGULA) {
-                    sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou fechaparenteses");
-                }
-            }
-            while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
-            
-            readNextToken(file); // Sneak
+            chamadaComParenteses = true;
+            compilarArgumentos(file, escopo, simboloAtual);
+            tokenValue = getCurrentToken();
         }
         
         if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES || tokenValue->codigo == TOKEN_SYMB_ATRIBUICAO) {
             if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES) {
                 do {
-                    compilaExpressao(file, escopo);
+                    exigirTipo(compilaExpressao(file, escopo), TYPE_BASE_INTEGER, "Índices de acesso devem ser numéricos");
                     
                     tokenValue = getCurrentToken();
                     
@@ -567,7 +640,20 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se atribuicao");
             }
             
-            compilaExpressao(file, escopo); // Sneaky
+            SymbolTipo tipoDestino = simboloAtual->symbolTipo;
+            exigirTipo(compilaExpressao(file, escopo), tipoDestino, "O tipo do valor atribuído não corresponde ao tipo da variável");
+        }
+
+        if (!chamadaComParenteses && simboloDaCategoria(simboloAtual, TOKEN_KEYW_PROCEDIMENTO)) {
+            if (simboloAtual->symbolParameters != NULL) {
+                sairErroTerminal(ERROR_ARGUMENT_COUNT, "A chamada sem parênteses não fornece os parâmetros declarados pelo procedimento");
+            }
+        }
+
+        if (simboloDaCategoria(simboloAtual, TOKEN_KEYW_FUNCAO) &&
+            simboloAtual->symbolParameters != NULL &&
+            tokenValue->codigo != TOKEN_SYMB_ATRIBUICAO) {
+            sairErroTerminal(ERROR_ARGUMENT_COUNT, "A função exige argumentos conforme sua declaração");
         }
         
         return;
@@ -603,7 +689,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     }
     
     if (tokenValue->codigo == TOKEN_KEYW_SE) {
-        compilaExpressao(file, escopo);
+        exigirTipo(compilaExpressao(file, escopo), TYPE_BASE_BOOLEAN, "A condição do if precisa ser booleana");
         
         tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_KEYW_ENTAO) {
@@ -625,7 +711,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     }
     
     if (tokenValue->codigo == TOKEN_KEYW_ENQUANTO) {
-        compilaExpressao(file, escopo);
+        exigirTipo(compilaExpressao(file, escopo), TYPE_BASE_BOOLEAN, "A condição do while precisa ser booleana");
         
         tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_KEYW_FACA) {
@@ -641,142 +727,152 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se identificador, vapara, se, enquanto ou inicio");
 }
 
-void compilaExpressao(FILE* file, int escopo) { // NEXT: analex(..., false);
-    Token* tokenValue;
-    
-    compilaExpressaoSimples(file, escopo); 
-    
-    tokenValue = getCurrentToken(); // Gets sneaky
-    if (
-        tokenValue->codigo == TOKEN_SYMB_IGUAL ||
-        tokenValue->codigo == TOKEN_SYMB_DIFERENTE ||
-        tokenValue->codigo == TOKEN_SYMB_MAIORIGUAL ||
-        tokenValue->codigo == TOKEN_SYMB_MENORIGUAL ||
-        tokenValue->codigo == TOKEN_SYMB_MAIOR ||
-        tokenValue->codigo == TOKEN_SYMB_MENOR
-    ) {
-        compilaExpressaoSimples(file, escopo); // Sneaky
-    }
-    
-    return;
+static bool operadorRelacional(TokenTipo codigo) {
+    return codigo == TOKEN_SYMB_IGUAL || codigo == TOKEN_SYMB_DIFERENTE ||
+        codigo == TOKEN_SYMB_MAIORIGUAL || codigo == TOKEN_SYMB_MENORIGUAL ||
+        codigo == TOKEN_SYMB_MAIOR || codigo == TOKEN_SYMB_MENOR;
 }
 
-void compilaExpressaoSimples(FILE* file, int escopo) { // NEXT: analex(..., false);
-    Token* tokenValue;
-    
-    tokenValue = readNextToken(file);
-    
-    if (tokenValue->codigo == TOKEN_SYMB_MAIS || tokenValue->codigo == TOKEN_SYMB_MENOS) {
-        tokenValue = readNextToken(file);
+static SymbolTipo compilaExpressaoAtual(FILE* file, int escopo) {
+    SymbolTipo esquerda = compilaExpressaoSimples(file, escopo);
+    TokenTipo operador = getCurrentToken()->codigo;
+    if (!operadorRelacional(operador)) return esquerda;
+
+    if (operador == TOKEN_SYMB_MAIOR || operador == TOKEN_SYMB_MAIORIGUAL ||
+        operador == TOKEN_SYMB_MENOR || operador == TOKEN_SYMB_MENORIGUAL) {
+        exigirTipo(esquerda, TYPE_BASE_INTEGER, "Comparações de ordem aceitam apenas valores numéricos");
     }
-    
-    compilaTermo(file, escopo);
-    
+
+    readNextToken(file);
+    SymbolTipo direita = compilaExpressaoSimples(file, escopo);
+    if (esquerda != direita) {
+        sairErroTerminal(ERROR_TYPE_MISMATCH, "Os tipos dos operandos da comparação são incompatíveis");
+    }
+    if (operador == TOKEN_SYMB_MAIOR || operador == TOKEN_SYMB_MAIORIGUAL ||
+        operador == TOKEN_SYMB_MENOR || operador == TOKEN_SYMB_MENORIGUAL) {
+        exigirTipo(direita, TYPE_BASE_INTEGER, "Comparações de ordem aceitam apenas valores numéricos");
+    }
+    return TYPE_BASE_BOOLEAN;
+}
+
+static SymbolTipo compilaExpressao(FILE* file, int escopo) {
+    readNextToken(file);
+    return compilaExpressaoAtual(file, escopo);
+}
+
+static SymbolTipo compilaExpressaoSimples(FILE* file, int escopo) {
+    Token* tokenValue = getCurrentToken();
+    TokenTipo sinal = tokenValue->codigo;
+    if (sinal == TOKEN_SYMB_MAIS || sinal == TOKEN_SYMB_MENOS) tokenValue = readNextToken(file);
+
+    SymbolTipo tipo = compilaTermo(file, escopo);
+    if (sinal == TOKEN_SYMB_MAIS || sinal == TOKEN_SYMB_MENOS) {
+        exigirTipo(tipo, TYPE_BASE_INTEGER, "O sinal unário aceita apenas valores numéricos");
+    }
+
     while (true) {
         tokenValue = getCurrentToken();
-        
-        if (
-            tokenValue->codigo == TOKEN_SYMB_MAIS ||
-            tokenValue->codigo == TOKEN_SYMB_MENOS ||
-            tokenValue->codigo == TOKEN_SYMB_OU
-        ) {
+        if (tokenValue->codigo == TOKEN_SYMB_MAIS || tokenValue->codigo == TOKEN_SYMB_MENOS) {
+            exigirTipo(tipo, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             readNextToken(file);
-            compilaTermo(file, escopo);
-        }
-        else {
-            return;
+            exigirTipo(compilaTermo(file, escopo), TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
+            tipo = TYPE_BASE_INTEGER;
+        } else if (tokenValue->codigo == TOKEN_SYMB_OU) {
+            exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
+            readNextToken(file);
+            exigirTipo(compilaTermo(file, escopo), TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
+            tipo = TYPE_BASE_BOOLEAN;
+        } else {
+            return tipo;
         }
     }
 }
 
-void compilaTermo(FILE* file, int escopo) { // NEXT: analex(..., false);
+static SymbolTipo compilaTermo(FILE* file, int escopo) {
     Token* tokenValue;
-    
-    compilaFator(file, escopo);
-    
+    SymbolTipo tipo = compilaFator(file, escopo);
     while (true) {
-        tokenValue = getCurrentToken(); // Gets Sneaky
-        
-        if (
-            tokenValue->codigo == TOKEN_SYMB_VEZES ||
-            tokenValue->codigo == TOKEN_SYMB_DIVIDIR ||
-            tokenValue->codigo == TOKEN_SYMB_E
-        ) {
+        tokenValue = getCurrentToken();
+        if (tokenValue->codigo == TOKEN_SYMB_VEZES || tokenValue->codigo == TOKEN_SYMB_DIVIDIR) {
+            exigirTipo(tipo, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
             readNextToken(file);
-            compilaFator(file, escopo);
-        }
-        else {
-            return;
+            exigirTipo(compilaFator(file, escopo), TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
+            tipo = TYPE_BASE_INTEGER;
+        } else if (tokenValue->codigo == TOKEN_SYMB_E) {
+            exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
+            readNextToken(file);
+            exigirTipo(compilaFator(file, escopo), TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
+            tipo = TYPE_BASE_BOOLEAN;
+        } else {
+            return tipo;
         }
     }
 }
 
-void compilaFator(FILE* file, int escopo) { // NEXT: analex(..., false);
+static SymbolTipo compilaFator(FILE* file, int escopo) {
     Token* tokenValue;
-    
     tokenValue = getCurrentToken();
-    
+
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
-        verificarSymbolTable(tokenValue); // Garante que esse identificador foi declarado (e ainda está em escopo)
-        
-        tokenValue = readNextToken(file); // Sneaky
-        
+        verificarSymbolTable(tokenValue);
+        SymbolGenerico* simbolo = buscarSymbolTable(tokenValue->identificador);
+        tokenValue = readNextToken(file);
+
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
-            do {
-                compilaExpressao(file, escopo);
-                
-                tokenValue = getCurrentToken(); // Gets Sneaky
-                if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
-                    sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
-                }
+            if (!simboloDaCategoria(simbolo, TOKEN_KEYW_FUNCAO)) {
+                sairErroTerminal(ERROR_INVALID_CALL, "Somente funções podem ser usadas em expressões; procedimentos não retornam valores");
             }
-            while(tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES);
-            
-            readNextToken(file); // Sneaky
+            compilarArgumentos(file, escopo, simbolo);
+            return simbolo->symbolTipo;
         }
-        
+
         if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES) {
             do {
-                compilaExpressao(file, escopo);
-                
-                tokenValue = getCurrentToken(); // Gets Senaky
+                exigirTipo(compilaExpressao(file, escopo), TYPE_BASE_INTEGER, "Índices de acesso devem ser numéricos");
+                tokenValue = getCurrentToken();
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se uma virgula ou um fechacolchetes");
                 }
             }
             while(tokenValue->codigo != TOKEN_SYMB_FECHACOLCHETES);
             
-            readNextToken(file); // Sneaky
+            readNextToken(file);
+            return simbolo->symbolTipo;
         }
-        
-        return;
+
+        if (simboloDaCategoria(simbolo, TOKEN_KEYW_FUNCAO)) {
+            if (simbolo->symbolParameters != NULL) {
+                sairErroTerminal(ERROR_ARGUMENT_COUNT, "A função exige argumentos conforme sua declaração");
+            }
+            return simbolo->symbolTipo;
+        }
+        if (simboloDaCategoria(simbolo, TOKEN_KEYW_PROCEDIMENTO)) {
+            sairErroTerminal(ERROR_INVALID_CALL, "Procedimentos não produzem valores que possam participar de expressões");
+        }
+        return simbolo->symbolTipo;
     }
-    
+
     if (tokenValue->codigo == TOKEN_OPER_NUMERO) {
-        readNextToken(file); // Sneaky
-        
-        return;
+        readNextToken(file);
+        return TYPE_BASE_INTEGER;
     }
-    
+
     if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
-        compilaExpressao(file, escopo);
-        
-        tokenValue = getCurrentToken(); // Gets Sneaky
+        SymbolTipo tipo = compilaExpressao(file, escopo);
+        tokenValue = getCurrentToken();
         if (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fechaparenteses");
         }
-        
-        readNextToken(file); // Sneaky
-        
-        return;
+        readNextToken(file);
+        return tipo;
     }
-    
+
     if (tokenValue->codigo == TOKEN_SYMB_NAO) {
         readNextToken(file);
-        compilaFator(file, escopo); // Sneaky
-        
-        return;
+        exigirTipo(compilaFator(file, escopo), TYPE_BASE_BOOLEAN, "O operador not aceita apenas valores booleanos");
+        return TYPE_BASE_BOOLEAN;
     }
-    
+
     sairErroTerminal(ERROR_INVALID_TOKEN, "Sintaxe Inexperada Para Fator");
+    return TYPE_BASE_NULL;
 }

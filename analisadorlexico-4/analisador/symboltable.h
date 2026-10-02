@@ -20,6 +20,11 @@ typedef enum {
     CATG_BASE_PARAMETRO_CHAMADA
 } SymbolCategoria;
 
+typedef struct SymbolParametro {
+    SymbolTipo tipo;
+    struct SymbolParametro* proximo;
+} SymbolParametro;
+
 typedef struct {
     string symbolIdentificador;
     Token* symbolCategoria;
@@ -27,7 +32,7 @@ typedef struct {
     Token* referenciaNatureza;
     i8 symbolEscopo;
 
-    Lista* symbolParameters;
+    SymbolParametro* symbolParameters;
 } SymbolGenerico;
 
 extern Token symbolTiposDefinition[TYPE_BASE_BOOLEAN + 1];

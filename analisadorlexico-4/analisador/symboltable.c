@@ -37,6 +37,7 @@ static void mostrarSymbol(Elemento a) {
 
 static void destruirSymbol(Elemento a) {
     SymbolGenerico* symbol = (SymbolGenerico*) a;
+    if (symbol->symbolIdentificadorAlocado) free(symbol->symbolIdentificador);
     SymbolParametro* parametro = symbol->symbolParameters;
     while (parametro != NULL) {
         SymbolParametro* proximo = parametro->proximo;
@@ -67,6 +68,7 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, Sy
     novoSymbol->symbolTipo = symbolTipo;
     novoSymbol->referenciaNatureza = referenciaNatureza;
     novoSymbol->symbolEscopo = symbolEscopo;
+    novoSymbol->symbolIdentificadorAlocado = false;
 
     novoSymbol->symbolParameters = NULL;
 
@@ -143,6 +145,7 @@ void removerEscopoSymbolTable(i8 symbolEscopo) {
             // Print só de visualização, pra acompanhar o que está saindo da tabela.
             printf("[symtable] - '%s' (escopo %d encerrado)\n", symbolAtual->symbolIdentificador, symbolAtual->symbolEscopo);
 
+            if (symbolAtual->symbolIdentificadorAlocado) free(symbolAtual->symbolIdentificador);
             free(symbolAtual);
             free(remover);
             symbolTableContents->count--;

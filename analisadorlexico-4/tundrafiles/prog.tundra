@@ -1,6 +1,5 @@
 program exemplo12(input,output); (* 0 *)
 
-    var b: boolean;
     var x: integer; (* 1 *)
 
     procedure p(var t: integer); (* 1 *)
@@ -10,7 +9,7 @@ program exemplo12(input,output); (* 0 *)
         
         function f(z: integer): integer; (* 2 *)
         begin
-            if (z<0) and b
+            if (z<0)
             then goto 200
             else
                 if z=0 then f:=2

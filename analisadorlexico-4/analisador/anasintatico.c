@@ -45,10 +45,22 @@ static bool simboloDaCategoria(SymbolGenerico* symbol, TokenTipo categoria) {
     return symbol != NULL && symbol->symbolCategoria != NULL && symbol->symbolCategoria->codigo == categoria;
 }
 
-// Resolve o "tipo base" (natureza) de um identificador de tipo usado numa declaração:
-// 1) Primeiro tenta achar entre os tipos-base conhecidos (symbolTiposDefinition: null/integer);
-// 2) Se não achar, tenta achar entre os tipos já declarados antes pelo usuário (ex: "type jonas = integer");
-// 3) Se ainda assim não achar, cai em TYPE_BASE_NULL (tipo desconhecido).
+static void nomeInternoRotulo(char* destino, size_t tamanho, int escopo, const char* numero) {
+    snprintf(destino, tamanho, "@label:%d:%s", escopo, numero);
+}
+
+static SymbolGenerico* buscarRotuloVisivel(const char* numero, int escopo) {
+    char nome[128];
+    for (int nivel = escopo; nivel >= 0; nivel--) {
+        nomeInternoRotulo(nome, sizeof(nome), nivel, numero);
+        SymbolGenerico* rotulo = buscarSymbolTable(nome);
+        if (rotulo != NULL) return rotulo;
+    }
+    return NULL;
+}
+
+// Resolve um tipo primitivo ou um alias já declarado. Um identificador qualquer
+// (variável, função, programa etc.) não pode ser usado como tipo.
 void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** referenciaResolvida) {
     Token* tipoBase = buscarTokenTipoBase(tokenTipo->identificador);
 
@@ -60,13 +72,15 @@ void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** r
 
     SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador);
 
-    if (aliasEncontrado != NULL) {
+    if (simboloDaCategoria(aliasEncontrado, TOKEN_KEYW_TIPO)) {
         *naturezaResolvida = aliasEncontrado->symbolTipo;
         *referenciaResolvida = aliasEncontrado->referenciaNatureza;
         return;
     }
 
-    sairErroTerminal(ERROR_UNKNOWN_TYPE, "O Tipo Não Pôde Ser Determinado, Verifique Novamente");
+    char mensagem[192];
+    snprintf(mensagem, sizeof(mensagem), "Tipo '%s' não declarado (ou identificador não pertence à categoria type)", tokenTipo->identificador);
+    sairErroTerminal(ERROR_UNKNOWN_TYPE, mensagem);
 }
 
 // Verifica se um identificador usado (variável, parâmetro, procedimento ou função sendo
@@ -74,26 +88,24 @@ void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** r
 // foi declarado), buscarSymbolTable não vai encontrar nada e a gente aborta a compilação.
 void verificarSymbolTable(Token* tokenIdentificador) {
     if (buscarSymbolTable(tokenIdentificador->identificador) == NULL) {
+        if (strcmp(tokenIdentificador->identificador, "read") == 0) {
+            sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, "read só está disponível quando 'input' aparece no cabeçalho do programa");
+        }
+        if (strcmp(tokenIdentificador->identificador, "write") == 0) {
+            sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, "write só está disponível quando 'output' aparece no cabeçalho do programa");
+        }
         sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, "Identificador Não Declarado (ou Fora de Escopo)");
     }
 }
 
-// read/write são procedimentos embutidos da linguagem (não aparecem em nenhuma declaração
-// do programa do usuário), então precisam já existir na tabela antes de começar a compilar,
-// senão toda chamada a eles seria acusada como "identificador não declarado".
-static void registrarBuiltinsSymbolTable() {
+static Token* definicaoToken(TokenTipo codigo) {
     for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
-        if (tokenDefinitions[i].codigo == TOKEN_KEYW_FUNCAO) {
-            adicionarSymbolTable("read", &tokenDefinitions[i], TYPE_BASE_NULL, NULL, 0);
-            adicionarSymbolTable("write", &tokenDefinitions[i], TYPE_BASE_NULL, NULL, 0);
-            
-            return;
-        }
+        if (tokenDefinitions[i].codigo == codigo) return &tokenDefinitions[i];
     }
+    return NULL;
 }
 
 void anasin(FILE* file) {
-    registrarBuiltinsSymbolTable();
     compilaPrograma(file, 0);
 }
 
@@ -109,25 +121,34 @@ static void compilaPrograma(FILE* file, int escopo) {
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }
-    adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo);
+    adicionarSymbolTable(tokenValue->identificador, definicaoToken(TOKEN_KEYW_PROGRAMA), TYPE_BASE_NULL, NULL, (i8) escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um abre parenteses!");
     }
     
+    bool declarouInput = false;
+    bool declarouOutput = false;
     while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
         tokenValue = readNextToken(file);
         if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!");
         }
-        adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo); // ex: input, output
+        adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo);
+        if (strcmp(tokenValue->identificador, "input") == 0) declarouInput = true;
+        if (strcmp(tokenValue->identificador, "output") == 0) declarouOutput = true;
         
         tokenValue = readNextToken(file);
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um virgula ou um fecha parenteses!");
         }
     }
+
+    // read precisa da declaração de arquivo "input" no cabeçalho; write precisa de "output".
+    Token* categoriaProcedimento = definicaoToken(TOKEN_KEYW_PROCEDIMENTO);
+    if (declarouInput) adicionarSymbolTable("read", categoriaProcedimento, TYPE_BASE_NULL, NULL, (i8) escopo);
+    if (declarouOutput) adicionarSymbolTable("write", categoriaProcedimento, TYPE_BASE_NULL, NULL, (i8) escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -157,11 +178,23 @@ void compilaBloco(FILE* file, int escopo) {
         tokenValue = getCurrentToken();
         
         if (tokenValue->codigo == TOKEN_KEYW_ROTULO) {
+            Token* categoriaRotulo = tokenValue;
             do {
                 tokenValue = readNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_NUMERO) {
-                    sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um número");
+                    sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um número na declaração de rótulos");
                 }
+
+                char nomeRotulo[128];
+                nomeInternoRotulo(nomeRotulo, sizeof(nomeRotulo), escopo, tokenValue->identificador);
+                size_t tamanhoNome = strlen(nomeRotulo) + 1;
+                char* nomePersistente = (char*) malloc(tamanhoNome);
+                if (nomePersistente == NULL) {
+                    sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não foi possível armazenar o identificador do rótulo");
+                }
+                memcpy(nomePersistente, nomeRotulo, tamanhoNome);
+                adicionarSymbolTable(nomePersistente, categoriaRotulo, TYPE_BASE_NULL, NULL, (i8) escopo);
+                buscarSymbolTable(nomePersistente)->symbolIdentificadorAlocado = true;
                 
                 tokenValue = readNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -592,6 +625,13 @@ void compilaComando(FILE* file, int escopo) {
     tokenValue = readNextToken(file);
     
     if (tokenValue->codigo == TOKEN_OPER_NUMERO) {   // Comando Padrão e Adição de Rótulo
+        char numeroRotulo[128];
+        snprintf(numeroRotulo, sizeof(numeroRotulo), "%s", tokenValue->identificador);
+        if (buscarRotuloVisivel(numeroRotulo, escopo) == NULL) {
+            char mensagem[192];
+            snprintf(mensagem, sizeof(mensagem), "Rótulo '%s' usado no comando não foi declarado neste bloco", numeroRotulo);
+            sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, mensagem);
+        }
         tokenValue = readNextToken(file);
         
         if (tokenValue->codigo != TOKEN_SYMB_DOISPONTOS) {
@@ -668,6 +708,13 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se numero");
         }
         
+        char numeroRotulo[128];
+        snprintf(numeroRotulo, sizeof(numeroRotulo), "%s", tokenValue->identificador);
+        if (buscarRotuloVisivel(numeroRotulo, escopo) == NULL) {
+            char mensagem[192];
+            snprintf(mensagem, sizeof(mensagem), "goto referencia o rótulo '%s', que não foi declarado neste bloco", numeroRotulo);
+            sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, mensagem);
+        }
         readNextToken(file); // Sneaky
         return;
     }

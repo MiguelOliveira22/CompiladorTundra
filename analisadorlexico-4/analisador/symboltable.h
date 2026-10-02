@@ -30,6 +30,7 @@ typedef struct {
     SymbolTipo symbolTipo;
     Token* referenciaNatureza;
     i8 symbolEscopo;
+    bool symbolIdentificadorAlocado;
 
     SymbolParametro* symbolParameters;
 } SymbolGenerico;

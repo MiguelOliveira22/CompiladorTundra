@@ -8,15 +8,15 @@
 #include "error.h"
 #include "basics.h"
 
-void compilaPrograma(FILE* file, int escopo);
-void compilaBloco(FILE* file, int escopo);
-void compilaParametrosFormais(FILE* file, int escopo);
-void compilaComando(FILE* file, int escopo);
-void compilaComandoSemRotulo(FILE* file, int escopo);
-void compilaExpressao(FILE* file, int escopo);
-void compilaExpressaoSimples(FILE* file, int escopo);
-void compilaTermo(FILE* file, int escopo);
-void compilaFator(FILE* file, int escopo);
+static void compilaPrograma(FILE* file, int escopo);
+static void compilaBloco(FILE* file, int escopo);
+static void compilaParametrosFormais(FILE* file, int escopo);
+static void compilaComando(FILE* file, int escopo);
+static void compilaComandoSemRotulo(FILE* file, int escopo);
+static void compilaExpressao(FILE* file, int escopo);
+static void compilaExpressaoSimples(FILE* file, int escopo);
+static void compilaTermo(FILE* file, int escopo);
+static void compilaFator(FILE* file, int escopo);
 
 #define MAX_VARIAVEIS_POR_DECLARACAO 64
 
@@ -36,7 +36,7 @@ void resolverTipoBase(Token* tokenTipo, SymbolTipo* naturezaResolvida, Token** r
     SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador);
 
     if (aliasEncontrado != NULL) {
-        *naturezaResolvida = aliasEncontrado->symbolNatureza;
+        *naturezaResolvida = aliasEncontrado->symbolCategoria;
         *referenciaResolvida = aliasEncontrado->referenciaNatureza;
         return;
     }
@@ -58,8 +58,14 @@ void verificarSymbolTable(Token* tokenIdentificador) {
 // do programa do usuário), então precisam já existir na tabela antes de começar a compilar,
 // senão toda chamada a eles seria acusada como "identificador não declarado".
 static void registrarBuiltinsSymbolTable() {
-    adicionarSymbolTable("read", NULL, TYPE_BASE_NULL, NULL, 0);
-    adicionarSymbolTable("write", NULL, TYPE_BASE_NULL, NULL, 0);
+    for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
+        if (tokenDefinitions[i].codigo == TOKEN_KEYW_FUNCAO) {
+            adicionarSymbolTable("read", &tokenDefinitions[i], TYPE_BASE_NULL, NULL, 0);
+            adicionarSymbolTable("write", &tokenDefinitions[i], TYPE_BASE_NULL, NULL, 0);
+            
+            return;
+        }
+    }
 }
 
 void anasin(FILE* file) {
@@ -67,17 +73,15 @@ void anasin(FILE* file) {
     compilaPrograma(file, 0);
 }
 
-void compilaPrograma(FILE* file, int escopo) {
+static void compilaPrograma(FILE* file, int escopo) {
     Token* tokenValue;
     
-
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_KEYW_PROGRAMA) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um PROGRAM!");
     }
     
     tokenValue = readNextToken(file);
-
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }

@@ -2,4 +2,5 @@ run:
 	gcc main.c basics/error.c estruturas/lista.c \
 	analisador/analexico.c analisador/anasintatico.c \
 	analisador/symboltable.c analisador/tokenlexico.c \
-	-Ianalisador -Ibasics -Iestruturas -o ./tundra -std=c99
+	-Ianalisador -Ibasics -Iestruturas -Ianalisador/memory \
+	-o ./tundra -std=c99

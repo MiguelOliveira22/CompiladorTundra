@@ -2,7 +2,6 @@
 #define error
 
 #include "basics.h"
-#include "lista.h"
 
 typedef enum {
     ERROR_OK_OPERATION_SUCCESS,
@@ -26,6 +25,5 @@ typedef struct {
 } ErrorPosition;
 
 void sairErroTerminal(ErrorTipos erro, string message);
-void associarPonteirosParaErros(Elemento ponteiro, void (*d) (Elemento a));
 
 #endif

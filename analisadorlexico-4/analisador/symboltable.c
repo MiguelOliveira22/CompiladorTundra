@@ -8,12 +8,15 @@
 #include "lista.h"
 #include "error.h"
 
-static Lista* symbolTableContents = NULL;
-
 Token symbolTiposDefinition[] = {
     { TYPE_BASE_NULL,            "null",    false },
     { TYPE_BASE_INTEGER,         "integer", false },
+    { TYPE_BASE_BOOLEAN,         "boolean", false },
 };
+
+// Adicionar Input e Output to basic program variables
+
+static Lista* symbolTableContents = NULL;
 
 // Compara dois símbolos pelo identificador (usado pela Lista para achar/evitar duplicatas).
 static int compararSymbol(Elemento a, Elemento b) {
@@ -52,7 +55,7 @@ static void garantirSymbolTable() {
     }
 }
 
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolTipo symbolNatureza, Token* referenciaNatureza, i8 symbolEscopo) {
+void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolTipo symbolCategoria, Token* referenciaNatureza, i8 symbolEscopo) {
     garantirSymbolTable();
 
     SymbolGenerico* novoSymbol = (SymbolGenerico*) malloc(sizeof(SymbolGenerico));
@@ -62,7 +65,7 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolT
 
     novoSymbol->symbolIdentificador = symbolIdentificador;
     novoSymbol->symbolTipo = symbolTipo;
-    novoSymbol->symbolNatureza = symbolNatureza;
+    novoSymbol->symbolCategoria = symbolCategoria;
     novoSymbol->referenciaNatureza = referenciaNatureza;
     novoSymbol->symbolEscopo = symbolEscopo;
 

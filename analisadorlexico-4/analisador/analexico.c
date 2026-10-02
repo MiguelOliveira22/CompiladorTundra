@@ -8,11 +8,11 @@
 #include "tokenlexico.h"
 #include "analexico.h"
 
-// Posição Leitura Global
-ErrorPosition filePosition = {0, 0};
-
+static ErrorPosition filePosition = {0, 0};
 static Token* storedToken = NULL;
-static ErrorPosition currentPosition = {0, 0};
+
+// Posição Leitura Global
+ErrorPosition currentPosition = {0, 0};
 
 static void atualizarPosicao(const char currentChar) {
     if (currentChar == '\n') {
@@ -82,8 +82,6 @@ static Token* getNumericValid(char* word) {
     return identifier;
 }
 
-// Tenta casar 'candidato' contra as definições de token, filtrando por tokenEspecial
-// (false = palavra-chave/operador-palavra, true = símbolo) e por tamanho exato.
 static Token* procurarDefinicao(const char* candidato, bool especial, int tamanho) {
     for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
         if (tokenDefinitions[i].tokenEspecial != especial) {
@@ -141,8 +139,6 @@ static void findNextToken(FILE* currentFile) {
 
     char currentChar = 0;
 
-
-
     while (true) {
         currentChar = fgetc(currentFile);
 
@@ -156,6 +152,10 @@ static void findNextToken(FILE* currentFile) {
 
             if (feof(currentFile)) {
                 storedToken = &tokenEof;
+
+                filePosition.linha = 0;
+                filePosition.coluna = 0;
+
                 return;
             }
 

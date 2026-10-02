@@ -11,4 +11,6 @@
 Token* getCurrentToken(void);
 Token* readNextToken(FILE* currentFile);
 
+ErrorPosition currentPosition;
+
 #endif

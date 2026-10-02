@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "memorymng.h"
 #include "basics.h"
 #include "error.h"
 #include "tokenlexico.h"
@@ -47,7 +48,7 @@ static Token* getIdentifierValid(char* word) {
     identifier->identificador = word;
     identifier->tokenEspecial = false;
 
-    // cadastrarIdentifiersToClose();
+    cadastrarIdentifiersToClose(identifier);
 
     return identifier;
 }
@@ -134,7 +135,7 @@ static void findNextToken(FILE* currentFile) {
         sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
     }
 
-    associarPonteirosParaErros(currentIdentifier, NULL);
+    cadastrarStringsToClose(currentIdentifier);
     memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
 
     char currentChar = 0;

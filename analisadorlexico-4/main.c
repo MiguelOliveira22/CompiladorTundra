@@ -5,14 +5,10 @@
 #include "anasintatico.h"
 #include "analexico.h"
 
-static Lista* tabelaSimbolos = NULL;
-
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
         sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "Nenhum Arquivo Incluido Para Compilar");
     }
-
-    // construirLista(tabelaSimbolos, );
 
     for (int i = 1; i < argc; i ++) {
         FILE* atualArquivoParaCompilar = fopen(argv[i], "r");
@@ -22,6 +18,9 @@ int main(int argc, char* argv[]) {
         }
 
         anasin(atualArquivoParaCompilar);
-        sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa Interpretado Com Sucesso");
+        
+        fclose(atualArquivoParaCompilar);
     }
+
+    sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa Interpretado Com Sucesso");
 }

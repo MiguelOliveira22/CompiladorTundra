@@ -19,11 +19,16 @@ typedef enum {
     ERROR_IDENTIFIER_ALREADY_DECLARED,
 } ErrorTipos;
 
+typedef enum {
+    AVISO_EXEMPLO
+} AvisoTipos;
+
 typedef struct {
     int linha;
     int coluna;
 } ErrorPosition;
 
 void sairErroTerminal(ErrorTipos erro, string message);
+void printAvisoTerminal(AvisoTipos aviso, string message);
 
 #endif

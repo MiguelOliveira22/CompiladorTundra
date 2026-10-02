@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "error.h"
-#include "memory.h"
+#include "memorymng.h"
 
 void sairErroTerminal(ErrorTipos erro, string message)
 {
@@ -20,4 +20,13 @@ void sairErroTerminal(ErrorTipos erro, string message)
     }
 
     exit(erro);
+}
+
+void printAvisoTerminal(AvisoTipos aviso, string message) {
+    if (strlen(message) > 0) {
+        printf("Aviso %d - %s\n", aviso, message);
+    }
+    else {
+        printf("Aviso %d - Observação\n", aviso);
+    }
 }

@@ -22,8 +22,8 @@ typedef enum {
 
 typedef struct {
     string symbolIdentificador;
+    Token* symbolCategoria;
     Token* symbolTipo;
-    SymbolCategoria symbolCategoria;
     i8 symbolEscopo;
 
     Lista* symbolParameters;

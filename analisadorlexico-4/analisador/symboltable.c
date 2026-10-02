@@ -14,11 +14,8 @@ Token symbolTiposDefinition[] = {
     { TYPE_BASE_BOOLEAN,         "boolean", false },
 };
 
-// Adicionar Input e Output to basic program variables
-
 static Lista* symbolTableContents = NULL;
 
-// Compara dois símbolos pelo identificador (usado pela Lista para achar/evitar duplicatas).
 static int compararSymbol(Elemento a, Elemento b) {
     SymbolGenerico* symbolA = (SymbolGenerico*) a;
     SymbolGenerico* symbolB = (SymbolGenerico*) b;
@@ -26,15 +23,14 @@ static int compararSymbol(Elemento a, Elemento b) {
     return strcmp(symbolA->symbolIdentificador, symbolB->symbolIdentificador);
 }
 
-// Imprime um símbolo (usado por printarLista, se precisar depurar a tabela).
 static void mostrarSymbol(Elemento a) {
     SymbolGenerico* symbol = (SymbolGenerico*) a;
 
     printf(
-        "[%s] categoria=%s natureza=%s escopo=%d\n",
+        "[ID] %s;\t[TIPO] %s;\t[CATEG] %s;\n[ESCOPO] %d;\n[PARAMS] ",
         symbol->symbolIdentificador,
         symbol->symbolTipo != NULL ? symbol->symbolTipo->identificador : "?",
-        symbol->referenciaNatureza != NULL ? symbol->referenciaNatureza->identificador : "?",
+        symbol->symbolCategoria != NULL ? symbol->symbolCategoria->identificador : "?",
         symbol->symbolEscopo
     );
 }
@@ -43,20 +39,16 @@ static void destruirSymbol(Elemento a) {
     free(a);
 }
 
-// Cria a lista da tabela de símbolos, se ainda não existir.
-static void garantirSymbolTable() {
+void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolCategoria symbolCategoria, i8 symbolEscopo) {
     if (symbolTableContents == NULL) {
         symbolTableContents = (Lista*) malloc(sizeof(Lista));
+        
         if (symbolTableContents == NULL) {
             sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não Foi Possível Alocar a Tabela de Símbolos");
         }
 
         construirLista(symbolTableContents, compararSymbol, mostrarSymbol, destruirSymbol);
     }
-}
-
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolTipo symbolCategoria, Token* referenciaNatureza, i8 symbolEscopo) {
-    garantirSymbolTable();
 
     SymbolGenerico* novoSymbol = (SymbolGenerico*) malloc(sizeof(SymbolGenerico));
     if (novoSymbol == NULL) {
@@ -66,8 +58,9 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolT
     novoSymbol->symbolIdentificador = symbolIdentificador;
     novoSymbol->symbolTipo = symbolTipo;
     novoSymbol->symbolCategoria = symbolCategoria;
-    novoSymbol->referenciaNatureza = referenciaNatureza;
     novoSymbol->symbolEscopo = symbolEscopo;
+
+    novoSymbol->symbolParameters = NULL;
 
     // Se já existir um símbolo com o mesmo identificador, a lista recusa a inserção
     // (inserirElementoEmOrdemLista retorna false) e simplesmente ignoramos o novo símbolo.
@@ -89,6 +82,7 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolTipo, SymbolT
     );
 }
 
+
 SymbolGenerico* buscarSymbolTable(string symbolIdentificador) {
     if (symbolTableContents == NULL) {
         return NULL;
@@ -100,7 +94,6 @@ SymbolGenerico* buscarSymbolTable(string symbolIdentificador) {
     return (SymbolGenerico*) buscarElementoLista(symbolTableContents, &chaveBusca);
 }
 
-// Procura o nome de um tipo entre os tipos-base conhecidos (symbolTiposDefinition).
 Token* buscarTokenTipoBase(string nomeTipo) {
     int totalTipos = sizeof(symbolTiposDefinition) / sizeof(Token);
 

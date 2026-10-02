@@ -11,9 +11,13 @@ typedef enum {
 } SymbolTipo;
 
 typedef enum {
-    CATG_BASE_PROGRAM_NAME,
-    CATG_BASE_VARIABLE,
-    CATG_BASE_
+    CATG_BASE_NOME_PROGRAMA,
+    CATG_BASE_VARIAVEL,
+    CATG_BASE_TIPO,
+    CATG_BASE_ROTULO,
+    CATG_BASE_PROCEDIMENTO,
+    CATG_BASE_FUNCAO,
+    CATG_BASE_PARAMETRO_CHAMADA
 } SymbolCategoria;
 
 typedef struct {

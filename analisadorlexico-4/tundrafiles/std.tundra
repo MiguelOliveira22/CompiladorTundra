@@ -15,3 +15,4 @@ program std(input, output); (* Biblioteca Padrão - Injeção de C posterior *)
 begin
     (* Injeção de C posterior *)
 end.
+

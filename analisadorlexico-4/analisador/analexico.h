@@ -1,8 +1,6 @@
 #ifndef analexico
 #define analexico
 
-#include "basics.h"
-#include "lista.h"
 #include "error.h"
 #include "tokenlexico.h"
 

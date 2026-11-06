@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "tokenlexico.h"
 #include "basics.h"
 

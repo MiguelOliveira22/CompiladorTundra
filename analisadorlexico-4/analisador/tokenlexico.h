@@ -2,7 +2,6 @@
 #define tokenlexico
 
 #include "basics.h"
-#include "lista.h"
 
 typedef enum {
     TOKEN_KEYW_PROGRAMA,

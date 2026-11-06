@@ -199,8 +199,6 @@ static void findNextToken(FILE* currentFile) {
             }
         }
 
-        // Encontrou Conteúdo Útil
-
         currentPosition.linha = filePosition.linha;
         currentPosition.coluna = filePosition.coluna;
 

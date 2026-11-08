@@ -1,84 +1,90 @@
 INPP
 AMEM 1
-DSVR DS_R
+DSVS MAIN
 
-PROC_P:
-AMEM 1
-DSVR DS_F
+P:
+ENPR 1
+AMEM 1              ; s
+DSVS P_CORPO
 
-FUNC_F:
-CRVL 2, -4
+F:
+ENPR 2
+CRVL 2,-4           ; z
 CRCT 0
-CMEG
-DSVF L_F1
-ENRT 1, 1
-DSVR L_200
+CMME                ; z < 0
+DSVF F1
+DSVR L200,1,2       ; goto 200: rótulo no nível 1, saindo do nível 2
 
-L_F1:
-CRVL 2, -4
+F1:
+CRVL 2,-4
 CRCT 0
-CEQU
-DSVF L_F2
+CMIG                ; z = 0
+DSVF F2
 CRCT 2
-ARMZ 2, -5
-DSVR F_FIM
+ARMZ 2,-5           ; f := 2
+DSVS F_FIM
 
-L_F2:
-AMEM 1
-CRVL 2, -4
+F2:
+AMEM 1              ; espaço do resultado de f(z-2)
+CRVL 2,-4
 CRCT 2
-SUBR
-CHPR FUNC_F, 2
-CRVL 2, -4
+SUBT                ; z-2
+CHPR F,2            ; chamador (f) está no nível 2
+CRVL 2,-4
 MULT
 CRCT 1
 SOMA
-ARMZ 2, -5
+ARMZ 2,-5           ; f := f(z-2)*z + 1
 
 F_FIM:
-RTPR 2, 1
+RTPR 2,1
 
-DS_F:
-L_100:
-AMEM 1
-CRVI 1, -4
-CHPR FUNC_F, 1
-ARMZ 1, 0
-CRVL 1, 0
-ARMI 1, -4
-CRVI 1, -4
-CRVL 0, 0
-CMEG
-DSVT L_100
+P_CORPO:
+L100:
+AMEM 1              ; resultado de f(t)
+CRVI 1,-4           ; valor de t (parâmetro por referência)
+CHPR F,1            ; chamador (corpo de p) está no nível 1
+ARMZ 1,0            ; s := f(t)
+CRVL 1,0
+ARMI 1,-4           ; t := s
+CRVI 1,-4
+CRVL 0,0
+CMME                ; t < x
+DSVF L200
+DSVS L100
 
-L_200:
-CRVL 0, 0
+L200:
+ENRT 1,1            ; s := D[1]+1-1
+CRVL 0,0
 CRCT 1
-SUBR
-ARMZ 0, 0
-RTPR 1, 1
+SUBT
+ARMZ 0,0            ; x := x-1
+DMEM 1              ; libera s
+RTPR 1,1
 
-PROC_R:
-DSVR DS_Q
+R:
+ENPR 1
+DSVS R_CORPO
 
-PROC_Q:
-AMEM 1
+Q:
+ENPR 2
+AMEM 1              ; y
 LEIT
-ARMZ 2, 0
-CREN 2, 0
-CHPR PROC_P, 0
-CRVL 2, 0
+ARMZ 2,0
+CREN 2,0            ; endereço de y
+CHPR P,2            ; chamador (q) está no nível 2
+CRVL 2,0
 IMPR
 DMEM 1
-RTPR 2, 0
+RTPR 2,0
 
-DS_Q:
-CHPR PROC_Q, 1
-RTPR 1, 0
+R_CORPO:
+CHPR Q,1            ; chamador (r) está no nível 1
+RTPR 1,0
 
-DS_R:
+MAIN:
 LEIT
-ARMZ 0, 0
-CHPR PROC_R, 0
+ARMZ 0,0
+CHPR R,0            ; chamador (programa principal) está no nível 0
 DMEM 1
 PARA

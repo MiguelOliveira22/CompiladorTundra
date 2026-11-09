@@ -52,21 +52,11 @@ string codigoInstrucao[] = {
 FILE* file;
 
 void writeCommand(IndiceInstrucao i, string parametros[], int n) {
+    fprintf(file, "%s", codigoInstrucao[i]);
 
-    string parametro = (string) malloc(100 * sizeof(char));
-    if (parametro == NULL) return;
-
-    parametro[0] = '\0'; 
-
-    if (n > 0) {
-        strcat(parametro, parametros[0]);
-        
-        for (int i = 1; i < n; i++) {
-            strcat(parametro, ",");
-            strcat(parametro, parametros[i]);
-        }
+    for (int k = 0; k < n; k++) {
+        fprintf(file, "%s%s", (k == 0) ? " " : ",", parametros[k]);
     }
-    fprintf(file, "%s %s\n", codigoInstrucao[i], parametro);
 
-    free(parametro)
-};
+    fprintf(file, "\n");
+}

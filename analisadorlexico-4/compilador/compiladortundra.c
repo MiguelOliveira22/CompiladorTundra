@@ -3,6 +3,7 @@
 
 #include "compiladortundra.h"
 #include "basics.h"
+#include "error.h"
 
 string codigoInstrucao[] = {
     "CRCT",
@@ -52,6 +53,14 @@ string codigoInstrucao[] = {
 FILE* file;
 
 void writeCommand(IndiceInstrucao i, string parametros[], int n) {
+    if (file == NULL) {
+        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+    }
+
+    if (file == NULL) {
+        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
+    }
+
     fprintf(file, "%s", codigoInstrucao[i]);
 
     for (int k = 0; k < n; k++) {
@@ -59,4 +68,10 @@ void writeCommand(IndiceInstrucao i, string parametros[], int n) {
     }
 
     fprintf(file, "\n");
+}
+
+void endCompilation() {
+    if (file != NULL) {
+        fclose(file);
+    }
 }

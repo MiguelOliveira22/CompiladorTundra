@@ -3,6 +3,7 @@
 
 #include "tokenlexico.h"
 #include "basics.h"
+#include "lista.h"
 
 typedef enum {
     TYPE_BASE_NULL,

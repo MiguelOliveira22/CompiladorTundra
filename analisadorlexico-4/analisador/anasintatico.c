@@ -9,6 +9,7 @@
 #include "error.h"
 #include "basics.h"
 #include "anasintatico.h"
+#include "compiladortundra.h"
 
 static void compilaPrograma(FILE* file, int escopo);
 static void compilaBloco(FILE* file, int escopo);
@@ -156,6 +157,8 @@ static void compilaPrograma(FILE* file, int escopo) {
     }
     
     tokenValue = readNextToken(file);
+
+    writeCommand(CONTROLE_INICIA_PROGRAMA, NULL, 0);
     compilaBloco(file, escopo+1);
     
     tokenValue = getCurrentToken();
@@ -168,6 +171,8 @@ static void compilaPrograma(FILE* file, int escopo) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fim de arquivo!");
     }
     
+    writeCommand(CONTROLE_PARA, NULL, 0);
+    endCompilation();
     sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa sintaticamente correto!");
 }
 
@@ -278,11 +283,16 @@ void compilaBloco(FILE* file, int escopo) {
                     }
                 }
                 while(tokenValue->codigo != TOKEN_SYMB_DOISPONTOS);
-                
+
                 tokenValue = readNextToken(file);
                 if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
+
+                char bufferNumero[3];
+                snprintf(bufferNumero, sizeof(bufferNumero), "%d", totalNomes);
+                string params[] = { (string) &bufferNumero };
+                writeCommand(CONTROLE_ALOCA_MEM, params, 1);
                 
                 SymbolTipo naturezaResolvida;
                 Token* referenciaResolvida;
@@ -459,6 +469,11 @@ void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura
             if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
                 sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um [ID]");
             }
+
+            char bufferNumero[3];
+            snprintf(bufferNumero, sizeof(bufferNumero), "%d", totalNomes);
+            string params[] = { (string) &bufferNumero };
+            writeCommand(CONTROLE_ALOCA_MEM, params, 1);
             
             SymbolTipo naturezaResolvida;
             Token* referenciaResolvida;

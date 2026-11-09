@@ -51,5 +51,6 @@ typedef enum {
 } IndiceInstrucao;
 
 extern string codigoInstrucao[XINTERNAL_LIMITE_TABELA_INSTRUCOES];
+void writeCommand(IndiceInstrucao i, string parametros[], int n);
 
 #endif

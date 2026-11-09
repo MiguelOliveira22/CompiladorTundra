@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "compiladortundra.h"
 #include "basics.h"
@@ -50,6 +51,22 @@ string codigoInstrucao[] = {
 
 FILE* file;
 
-void writeCommand() {
-    fwrite(, , , file);
+void writeCommand(IndiceInstrucao i, string parametros[], int n) {
+
+    string parametro = (string) malloc(100 * sizeof(char));
+    if (parametro == NULL) return;
+
+    parametro[0] = '\0'; 
+
+    if (n > 0) {
+        strcat(parametro, parametros[0]);
+        
+        for (int i = 1; i < n; i++) {
+            strcat(parametro, ",");
+            strcat(parametro, parametros[i]);
+        }
+    }
+    fprintf(file, "%s %s\n", codigoInstrucao[i], parametro);
+
+    free(parametro)
 };

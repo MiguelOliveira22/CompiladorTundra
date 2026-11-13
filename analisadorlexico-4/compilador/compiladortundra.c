@@ -77,7 +77,7 @@ void writeLabel(const char* label) {
     if (file == NULL) {
         sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
     }
-    fprintf(file, "%s:\n", label);
+    fprintf(file, "%s: NADA\n", label);
 }
 
 void endCompilation() {

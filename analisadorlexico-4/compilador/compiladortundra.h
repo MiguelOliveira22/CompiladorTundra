@@ -14,7 +14,7 @@ typedef enum {
 
     OPERA_SOMA,
     OPERA_SUBTRACAO,
-    OPERA_MULTIPLICAO,
+    OPERA_MULTIPLICACAO,
     OPERA_DIVISAO,
 
     OPERA_INVERTE_SINAL,
@@ -52,6 +52,7 @@ typedef enum {
 
 extern string codigoInstrucao[XINTERNAL_LIMITE_TABELA_INSTRUCOES];
 void writeCommand(IndiceInstrucao i, string parametros[], int n);
+void writeLabel(const char* label);
 void endCompilation();
 
 #endif

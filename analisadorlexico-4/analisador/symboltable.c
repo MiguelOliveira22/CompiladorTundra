@@ -20,7 +20,13 @@ static int compararSymbol(Elemento a, Elemento b) {
     SymbolGenerico* symbolA = (SymbolGenerico*) a;
     SymbolGenerico* symbolB = (SymbolGenerico*) b;
 
-    return strcmp(symbolA->symbolIdentificador, symbolB->symbolIdentificador);
+    int validoEscopo = symbolA->symbolEscopo - symbolB->symbolEscopo;
+
+    if (validoEscopo == 0) {
+        return strcmp(symbolA->symbolIdentificador, symbolB->symbolIdentificador);
+    }
+
+    return validoEscopo;
 }
 
 static void mostrarSymbol(Elemento a) {
@@ -75,6 +81,12 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, Sy
     novoSymbol->referenciaNatureza = referenciaNatureza;
     novoSymbol->symbolEscopo = symbolEscopo;
     novoSymbol->symbolIdentificadorAlocado = false;
+    novoSymbol->symbolDeslocamento = 0;
+    novoSymbol->symbolParametroPorReferencia = false;
+    novoSymbol->symbolBuiltinIO = false;
+    novoSymbol->symbolIndiceParametro = -1;
+    novoSymbol->symbolQuantidadeParametros = 0;
+    novoSymbol->symbolDeslocamentoResultado = 0;
 
     novoSymbol->symbolParameters = NULL;
 
@@ -99,15 +111,21 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, Sy
 }
 
 
-SymbolGenerico* buscarSymbolTable(string symbolIdentificador) {
+SymbolGenerico* buscarSymbolTable(string symbolIdentificador, i8 escopo) {
     if (symbolTableContents == NULL) {
         return NULL;
     }
 
-    SymbolGenerico chaveBusca;
+    SymbolGenerico chaveBusca = {0};
     chaveBusca.symbolIdentificador = symbolIdentificador;
+    chaveBusca.symbolEscopo = escopo;
 
-    return (SymbolGenerico*) buscarElementoLista(symbolTableContents, &chaveBusca);
+    for (int nivel = escopo; nivel >= 0; nivel--) {
+        chaveBusca.symbolEscopo = (i8) nivel;
+        SymbolGenerico* encontrado = (SymbolGenerico*) buscarElementoLista(symbolTableContents, &chaveBusca);
+        if (encontrado != NULL) return encontrado;
+    }
+    return NULL;
 }
 
 Token* buscarTokenTipoBase(string nomeTipo) {
@@ -148,9 +166,9 @@ void removerEscopoSymbolTable(i8 symbolEscopo) {
                 anterior->prox = atual;
             }
 
-            if (symbolAtual->symbolIdentificadorAlocado) free(symbolAtual->symbolIdentificador);
-            free(symbolAtual);
+            destruirSymbol(symbolAtual);
             free(remover);
+
             symbolTableContents->count--;
         }
         else {

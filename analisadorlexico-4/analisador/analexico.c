@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <ctype.h>
 
 #include "basics.h"
@@ -64,8 +65,18 @@ static Token* getNumericValid(char* word) {
             return NULL;
         }
 
+        if (number > INT_MAX / 10) {
+            sairErroTerminal(ERROR_NUMERIC_OVERFLOW, "Valor numérico excede o tamanho máximo de representação do inteiro");
+        }
+
         number *= 10;
-        number += (int) (word[i] - '0');
+
+        int somaAtual = (int) (word[i] - '0');
+        if (number > INT_MAX - somaAtual) {
+            sairErroTerminal(ERROR_NUMERIC_OVERFLOW, "Valor numérico excede o tamanho máximo de representação do inteiro");
+        }
+
+        number += somaAtual;
     }
 
     Token* identifier = (Token*) malloc(sizeof(Token));

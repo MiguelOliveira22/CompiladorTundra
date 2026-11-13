@@ -43,6 +43,8 @@ typedef enum {
     TOKEN_SYMB_PONTO,
     TOKEN_SYMB_ABRECOMENTARIO,
     TOKEN_SYMB_FECHACOMENTARIO,
+
+    XINTERNAL_LIMITE_TABELA_TOKEN,
     
     TOKEN_OPER_INVALIDO,
     TOKEN_OPER_EOF,
@@ -57,7 +59,7 @@ typedef struct {
     bool tokenEspecial;
 } Token;
 
-extern Token tokenDefinitions[TOKEN_SYMB_FECHACOMENTARIO + 1];
+extern Token tokenDefinitions[XINTERNAL_LIMITE_TABELA_TOKEN];
 extern Token tokenEof;
 extern Token tokenInvalido;
 

@@ -70,8 +70,19 @@ void writeCommand(IndiceInstrucao i, string parametros[], int n) {
     fprintf(file, "\n");
 }
 
+void writeLabel(const char* label) {
+    if (file == NULL) {
+        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+    }
+    if (file == NULL) {
+        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
+    }
+    fprintf(file, "%s:\n", label);
+}
+
 void endCompilation() {
     if (file != NULL) {
         fclose(file);
+        file = NULL;
     }
 }

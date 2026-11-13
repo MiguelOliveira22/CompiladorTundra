@@ -6,21 +6,18 @@
 #include "analexico.h"
 
 int main(int argc, char* argv[]) {
-    if (argc <= 1) {
-        sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "Nenhum Arquivo Incluido Para Compilar");
+    if (argc != 2) {
+        sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "Informe exatamente um arquivo-fonte para compilar");
     }
 
-    for (int i = 1; i < argc; i ++) {
-        FILE* atualArquivoParaCompilar = fopen(argv[i], "r");
+    FILE* atualArquivoParaCompilar = fopen(argv[1], "r");
 
-        if (atualArquivoParaCompilar == NULL) {
-            sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Um Arquivo Não Pôde Ser Alocado");
-        }
-
-        anasin(atualArquivoParaCompilar);
-        
-        fclose(atualArquivoParaCompilar);
+    if (atualArquivoParaCompilar == NULL) {
+        sairErroTerminal(ERROR_FILE_NO_PROGRAM_FILES, "O arquivo não pôde ser encontrado");
     }
+
+    anasin(atualArquivoParaCompilar);
+    fclose(atualArquivoParaCompilar);
 
     sairErroTerminal(ERROR_OK_OPERATION_SUCCESS, "Programa Interpretado Com Sucesso");
 }

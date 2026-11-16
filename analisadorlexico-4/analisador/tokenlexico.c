@@ -48,5 +48,4 @@ Token tokenDefinitions[] = {
 };
 
 Token tokenInvalido = { TOKEN_OPER_INVALIDO, "invalido",  false };
-Token tokenEof = { TOKEN_OPER_EOF, "eof",  false };
-
+Token tokenEof      = { TOKEN_OPER_EOF,      "eof",       false };

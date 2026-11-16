@@ -50,6 +50,9 @@ typedef enum {
     XINTERNAL_LIMITE_TABELA_INSTRUCOES
 } IndiceInstrucao;
 
+extern int escopoAtual;
+extern int deslocamentoAtual;
+
 extern string codigoInstrucao[XINTERNAL_LIMITE_TABELA_INSTRUCOES];
 void writeCommand(IndiceInstrucao i, string parametros[], int n);
 void writeLabel(const char* label);

@@ -10,19 +10,41 @@
 #include "analexico.h"
 #include "memorymng.h"
 
+// Posição Leitura Global + Linha Atual
+ErrorPosition currentPosition = {0, 0};
+char currentLine[CAP_SIZE_LINHA] = { '\0' };
+static int posCurrentLine = 0;
+
 static ErrorPosition filePosition = {0, 0};
 static Token* storedToken = NULL;
-
-// Posição Leitura Global
-ErrorPosition currentPosition = {0, 0};
+static char currentIdentifier[CAP_SIZE_IDENTIFIER];
 
 static void atualizarPosicao(const char currentChar) {
     if (currentChar == '\n') {
         filePosition.coluna = 0;
         filePosition.linha ++;
+
+        posCurrentLine = 0;
+        currentLine[posCurrentLine] = '\0';
     }
     else {
         filePosition.coluna ++;
+    }
+}
+
+static void atualizarLinha(char currentChar) {
+    if (posCurrentLine + 1 < CAP_SIZE_LINHA) {
+        currentLine[posCurrentLine] = currentChar;
+        currentLine[posCurrentLine + 1] = '\0';
+
+        posCurrentLine ++;
+    }
+    else if (posCurrentLine < CAP_SIZE_LINHA) {
+        currentLine[CAP_SIZE_LINHA - 4] = '.';
+        currentLine[CAP_SIZE_LINHA - 3] = '.';
+        currentLine[CAP_SIZE_LINHA - 2] = '.';
+
+        posCurrentLine ++;
     }
 }
 
@@ -39,18 +61,7 @@ static Token* getIdentifierValid(char* word) {
         return NULL;
     }
     
-    Token* identifier = (Token*) malloc(sizeof(Token));
-
-    if (identifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "");
-    }
-
-    identifier->codigo = TOKEN_OPER_IDENTIFICADOR;
-    identifier->identificador = word;
-    identifier->tokenEspecial = false;
-
-    cadastrarPonteirosToClose(identifier, free);
-
+    Token* identifier = cadastrarTokenToClose(TOKEN_OPER_IDENTIFICADOR, word, false);
     return identifier;
 }
 
@@ -79,22 +90,11 @@ static Token* getNumericValid(char* word) {
         number += somaAtual;
     }
 
-    Token* identifier = (Token*) malloc(sizeof(Token));
-
-    if (identifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "getNumericValid não pôde alocar memória.");
-    }
-
-    identifier->codigo = TOKEN_OPER_NUMERO;
-    identifier->identificador = word;
-    identifier->tokenEspecial = false;
-
-    cadastrarPonteirosToClose(identifier, free);
-    
+    Token* identifier = cadastrarTokenToClose(TOKEN_OPER_NUMERO, word, false);
     return identifier;
 }
 
-static Token* procurarDefinicao(const char* candidato, bool especial, int tamanho) {
+static Token* procurarDefinicao(string candidato, bool especial, int tamanho) {
     for (int i = 0; i < sizeof(tokenDefinitions) / sizeof(Token); i ++) {
         if (tokenDefinitions[i].tokenEspecial != especial) {
             continue;
@@ -114,7 +114,7 @@ static Token* procurarDefinicao(const char* candidato, bool especial, int tamanh
     return NULL;
 }
 
-static Token* getToken(char* word) {
+static Token* getToken(string word) {
     Token* bufferToken;
 
     bufferToken = procurarDefinicao(word, false, strlen(word));
@@ -141,20 +141,14 @@ static Token* getToken(char* word) {
 }
 
 static void findNextToken(FILE* currentFile) {
-    string currentIdentifier = (string) malloc(CAP_SIZE_IDENTIFIER);
-    if (currentIdentifier == NULL) {
-        sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "A Função de Coleta de Token Não Pôde Alocar Uma Variavel Essencial");
-    }
-
-    cadastrarStringsToClose(currentIdentifier);
     memset(currentIdentifier, '\0', CAP_SIZE_IDENTIFIER);
-
     char currentChar = 0;
-
+    
     while (true) {
         currentChar = fgetc(currentFile);
 
         if (isspace(currentChar) || feof(currentFile)) {
+            atualizarLinha(currentChar);
             atualizarPosicao(currentChar);
 
             if (strlen(currentIdentifier) > 0) {
@@ -196,34 +190,39 @@ static void findNextToken(FILE* currentFile) {
                 return;
             }
             else {
+                atualizarLinha(currentChar);
+                atualizarPosicao(currentChar);
+
                 if (foundSpecial == foundSpecialDuplo) {
+                    atualizarLinha(proximoChar);
                     atualizarPosicao(proximoChar);
                 }
                 else {
                     ungetc(proximoChar, currentFile);
                 }
 
-                atualizarPosicao(currentChar);
-
                 storedToken = foundSpecial;
                 return;
             }
         }
 
-        currentPosition.linha = filePosition.linha;
-        currentPosition.coluna = filePosition.coluna;
-
         int tamanho = strlen(currentIdentifier);
         if (tamanho + 1 >= CAP_SIZE_IDENTIFIER) {
-            sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (36)");
+            sairErroTerminal(ERROR_EXCEEDED_IDENTIFIER_SIZE, "Identificador Excede o Tamanho Máximo de Caracteres (35)");
         }
 
         currentIdentifier[tamanho] = currentChar;
+        atualizarLinha(currentChar);
         atualizarPosicao(currentChar);
     }
 }
 
 Token* getCurrentToken() {
+    currentPosition.linha = filePosition.linha;
+    currentPosition.coluna = filePosition.coluna;
+
+    // printf("%s - %s\n", NOME_COMPONENTE_LEXICO, storedToken->identificador);
+
     return storedToken;
 }
 
@@ -244,5 +243,17 @@ Token* readNextToken(FILE* currentFile) {
         }
 
         return getCurrentToken();
+    }
+}
+
+void readLineToEndError(FILE* currentFile) {
+    while (true) {
+        char currentChar = (char) fgetc(currentFile);
+
+        if (currentChar == '\n' || feof(currentFile)) {
+            return;
+        }
+
+        atualizarLinha(currentChar);
     }
 }

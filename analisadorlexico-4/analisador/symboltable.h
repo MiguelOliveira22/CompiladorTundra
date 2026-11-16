@@ -5,6 +5,8 @@
 #include "basics.h"
 #include "lista.h"
 
+#define NOME_COMPONENTE_SYMTABLE "[symtable]"
+
 typedef enum {
     TYPE_BASE_NULL,
     TYPE_BASE_INTEGER,
@@ -20,36 +22,20 @@ typedef enum {
     CATG_BASE_FUNCAO
 } SymbolCategoria;
 
-typedef struct SymbolParametro {
-    const char* nome;
-    SymbolTipo tipo;
-    bool porReferencia;
-    struct SymbolParametro* proximo;
-} SymbolParametro;
-
 typedef struct {
-    string symbolIdentificador;
-    Token* symbolCategoria;
-    SymbolTipo symbolTipo;
-    Token* referenciaNatureza;
-    i8 symbolEscopo;
-    bool symbolIdentificadorAlocado;
-    int symbolDeslocamento;
-    bool symbolParametroPorReferencia;
-    bool symbolBuiltinIO;
-    int symbolIndiceParametro;
-    int symbolQuantidadeParametros;
-    int symbolDeslocamentoResultado;
+    SymbolTipo tipo;
+    SymbolCategoria categoria;
+    string identificador;
+    
+    int escopo;
+    int deslocamento;
+    bool inicializado;
+    bool acessado;
 
-    SymbolParametro* symbolParameters;
-} SymbolGenerico;
+    Lista* parametros;
+} Symbol;
 
 extern Token symbolTiposDefinition[TYPE_BASE_BOOLEAN + 1];
 extern Lista* customTiposDefinition;
-
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, i8 symbolEscopo);
-SymbolGenerico* buscarSymbolTable(string symbolIdentificador, i8 escopo);
-Token* buscarTokenTipoBase(string nomeTipo);
-void removerEscopoSymbolTable(i8 symbolEscopo);
 
 #endif

@@ -50,6 +50,7 @@ bool inserirElementoNoFinalLista(Lista* listaParaInserir, Elemento adicionarElem
     }
 
     listaParaInserir->fim = novoNo;
+    listaParaInserir->count ++;
 
     return true;
 }

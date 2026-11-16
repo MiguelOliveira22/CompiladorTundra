@@ -3,6 +3,8 @@
 
 #include "basics.h"
 
+#define NOME_COMPONENTE_TOKENLEX "[tokenlex]"
+
 typedef enum {
     TOKEN_KEYW_PROGRAMA,
     TOKEN_KEYW_ROTULO,
@@ -48,7 +50,6 @@ typedef enum {
     
     TOKEN_OPER_INVALIDO,
     TOKEN_OPER_EOF,
-
     TOKEN_OPER_IDENTIFICADOR,
     TOKEN_OPER_NUMERO,
 } TokenTipo;

@@ -72,7 +72,7 @@ static void emitirChamada(SymbolGenerico* simbolo, int escopoAtual) {
 }
 
 static void novoRotuloCodigo(char* destino, size_t tamanho, const char* prefixo) {
-    snprintf(destino, tamanho, "_%s_%lu", prefixo, ++contadorRotulosCodigo);
+    snprintf(destino, tamanho, "XIN_%s_%lu", prefixo, ++contadorRotulosCodigo);
 }
 
 static void emitir(IndiceInstrucao instrucao, const char* a, const char* b, const char* c) {
@@ -185,7 +185,7 @@ static Token* definicaoToken(TokenTipo codigo) {
     return NULL;
 }
 
-void anasin(FILE* file) {
+void analizeSynSem(FILE* file) {
     compilaPrograma(file, 0);
 }
 
@@ -201,23 +201,19 @@ static void compilaPrograma(FILE* file, int escopo) {
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }
-    adicionarSymbolTable(tokenValue->identificador, definicaoToken(TOKEN_KEYW_PROGRAMA), TYPE_BASE_NULL, NULL, (i8) escopo);
+    adicionarSymbolTable(tokenValue->identificador, TOKEN_KEYW_PROGRAMA, TYPE_BASE_NULL, (i8) escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um abre parenteses!");
     }
     
-    bool declarouInput = false;
-    bool declarouOutput = false;
     while (tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
         tokenValue = readNextToken(file);
         if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!");
         }
-        adicionarSymbolTable(tokenValue->identificador, NULL, TYPE_BASE_NULL, NULL, (i8) escopo);
-        if (strcmp(tokenValue->identificador, "input") == 0) declarouInput = true;
-        if (strcmp(tokenValue->identificador, "output") == 0) declarouOutput = true;
+        adicionarSymbolTable(tokenValue->identificador, CATG_BASE_VARIAVEL, TYPE_BASE_NULL, (i8) escopo);
 
         tokenValue = readNextToken(file);
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
@@ -225,16 +221,8 @@ static void compilaPrograma(FILE* file, int escopo) {
         }
     }
 
-    // read precisa da declaração de arquivo "input" no cabeçalho; write precisa de "output".
-    Token* categoriaProcedimento = definicaoToken(TOKEN_KEYW_PROCEDIMENTO);
-    if (declarouInput) {
-        adicionarSymbolTable("read", categoriaProcedimento, TYPE_BASE_NULL, NULL, (i8) escopo);
-        buscarSymbolTable("read", (i8) escopo)->symbolBuiltinIO = true;
-    }
-    if (declarouOutput) {
-        adicionarSymbolTable("write", categoriaProcedimento, TYPE_BASE_NULL, NULL, (i8) escopo);
-        buscarSymbolTable("write", (i8) escopo)->symbolBuiltinIO = true;
-    }
+    adicionarSymbolTable("read", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, (i8) escopo);
+    adicionarSymbolTable("write", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, (i8) escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -244,7 +232,8 @@ static void compilaPrograma(FILE* file, int escopo) {
     tokenValue = readNextToken(file);
 
     writeCommand(CONTROLE_INICIA_PROGRAMA, NULL, 0);
-    compilaBloco(file, escopo+1, NULL);
+
+    compilaBloco(file, escopo + 1, NULL);
     
     tokenValue = getCurrentToken();
     if (tokenValue->codigo != TOKEN_SYMB_PONTO) {
@@ -258,6 +247,7 @@ static void compilaPrograma(FILE* file, int escopo) {
     
     writeCommand(CONTROLE_PARA, NULL, 0);
     endCompilation();
+
     return;
 }
 
@@ -976,6 +966,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     
     if (tokenValue->codigo == TOKEN_KEYW_ENQUANTO) {
         char rotuloInicio[64], rotuloFim[64];
+
         novoRotuloCodigo(rotuloInicio, sizeof(rotuloInicio), "WHILE");
         novoRotuloCodigo(rotuloFim, sizeof(rotuloFim), "ENDWHILE");
         writeLabel(rotuloInicio);

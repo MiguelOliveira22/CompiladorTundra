@@ -1,6 +1,8 @@
 #ifndef error
 #define error
 
+#include <stdio.h>
+
 #include "basics.h"
 
 typedef enum {
@@ -10,9 +12,9 @@ typedef enum {
     ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED,
 
     ERROR_INSUFFICIENT_MEMORY_MALLOC,
+
     ERROR_EXCEEDED_IDENTIFIER_SIZE,
     ERROR_NUMERIC_OVERFLOW,
-    
     ERROR_UNKNOWN_TOKEN,
     ERROR_INVALID_TOKEN,
     ERROR_UNDECLARED_IDENTIFIER,
@@ -38,5 +40,10 @@ typedef struct {
 
 void sairErroTerminal(ErrorTipos erro, string message);
 void printAvisoTerminal(AvisoTipos aviso, string message);
+
+string strduplic(string data);
+
+extern string caminhoArquivoAtual;
+extern FILE* arquivoAtualParaCompilar;
 
 #endif

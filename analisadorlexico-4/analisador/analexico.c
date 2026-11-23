@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <ctype.h>
 
+#include "compiladortundra.h"
 #include "basics.h"
 #include "error.h"
 #include "tokenlexico.h"
@@ -11,11 +11,12 @@
 #include "memorymng.h"
 
 // Posição Leitura Global + Linha Atual
-ErrorPosition currentPosition = {0, 0};
-char currentLine[CAP_SIZE_LINHA] = { '\0' };
+CompilationPosition currentPosition = {0, 0};
+static CompilationPosition filePosition = {0, 0};
+
+char currentLine[CAP_SIZE_LINHA_BUFFER] = { '\0' };
 static int posCurrentLine = 0;
 
-static ErrorPosition filePosition = {0, 0};
 static Token* storedToken = NULL;
 static char currentIdentifier[CAP_SIZE_IDENTIFIER];
 
@@ -33,16 +34,16 @@ static void atualizarPosicao(const char currentChar) {
 }
 
 static void atualizarLinha(char currentChar) {
-    if (posCurrentLine + 1 < CAP_SIZE_LINHA) {
+    if (posCurrentLine + 1 < CAP_SIZE_LINHA_BUFFER) {
         currentLine[posCurrentLine] = currentChar;
         currentLine[posCurrentLine + 1] = '\0';
 
         posCurrentLine ++;
     }
-    else if (posCurrentLine < CAP_SIZE_LINHA) {
-        currentLine[CAP_SIZE_LINHA - 4] = '.';
-        currentLine[CAP_SIZE_LINHA - 3] = '.';
-        currentLine[CAP_SIZE_LINHA - 2] = '.';
+    else if (posCurrentLine < CAP_SIZE_LINHA_BUFFER) {
+        currentLine[CAP_SIZE_LINHA_BUFFER - 4] = '.';
+        currentLine[CAP_SIZE_LINHA_BUFFER - 3] = '.';
+        currentLine[CAP_SIZE_LINHA_BUFFER - 2] = '.';
 
         posCurrentLine ++;
     }

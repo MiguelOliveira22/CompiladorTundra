@@ -1,12 +1,13 @@
 #ifndef basics
 #define basics
 
-typedef unsigned char i8;
 typedef char* string;
 typedef void* Elemento;
 
 typedef enum {
     false, true
 } bool;
+
+string strduplic(string data);
 
 #endif

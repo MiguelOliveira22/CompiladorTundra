@@ -1,8 +1,6 @@
 #ifndef error
 #define error
 
-#include <stdio.h>
-
 #include "basics.h"
 
 typedef enum {
@@ -33,17 +31,7 @@ typedef enum {
     XINTERNAL_LIMITE_TABELA_AVISOS,
 } AvisoTipos;
 
-typedef struct {
-    int linha;
-    int coluna;
-} ErrorPosition;
-
 void sairErroTerminal(ErrorTipos erro, string message);
 void printAvisoTerminal(AvisoTipos aviso, string message);
-
-string strduplic(string data);
-
-extern string caminhoArquivoAtual;
-extern FILE* arquivoAtualParaCompilar;
 
 #endif

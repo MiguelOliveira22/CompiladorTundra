@@ -50,39 +50,24 @@ string codigoInstrucao[] = {
     "RTPR"
 };
 
-FILE* file;
-
 void writeCommand(IndiceInstrucao i, string parametros[], int n) {
-    if (file == NULL) {
-        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+    if (arquivoInstrucoes == NULL) {
+        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de encontrar o arquivo-objeto");
     }
 
-    if (file == NULL) {
-        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
-    }
-
-    fprintf(file, "%s", codigoInstrucao[i]);
+    fprintf(arquivoInstrucoes, "%s", codigoInstrucao[i]);
 
     for (int k = 0; k < n; k++) {
-        fprintf(file, "%s%s", (k == 0) ? " " : ",", parametros[k]);
+        fprintf(arquivoInstrucoes, "%s%s", (k == 0) ? " " : ",", parametros[k]);
     }
 
-    fprintf(file, "\n");
+    fprintf(arquivoInstrucoes, "\n");
 }
 
-void writeLabel(const char* label) {
-    if (file == NULL) {
-        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+void writeLabel(string label) {
+    if (arquivoInstrucoes == NULL) {
+        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de encontrar o arquivo-objeto");
     }
-    if (file == NULL) {
-        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
-    }
-    fprintf(file, "%s: NADA\n", label);
-}
-
-void endCompilation() {
-    if (file != NULL) {
-        fclose(file);
-        file = NULL;
-    }
+    
+    fprintf(arquivoInstrucoes, "%s: NADA\n", label);
 }

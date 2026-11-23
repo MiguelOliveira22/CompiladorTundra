@@ -78,7 +78,6 @@ void closePonteiros() {
 
     NoLista* atual = ponteirosToClose->inicio;
     while (atual != NULL) {
-        NoLista* proximo = atual->prox;
         PonteiroDestrutivel* item = (PonteiroDestrutivel*) atual->info;
 
         if (item->d != NULL) {
@@ -87,7 +86,7 @@ void closePonteiros() {
 
         free(item);
         free(atual);
-        atual = proximo;
+        atual = atual->prox;
     }
 
     ponteirosToClose->inicio = NULL;
@@ -122,7 +121,7 @@ static void destruirSymbol(Elemento a) {
     free(symbol);
 }
 
-void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, i8 symbolEscopo) {
+void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, SymbolTipo symbolTipo, Token* referenciaNatureza, int symbolEscopo) {
     if (symbolTableContents == NULL) {
         symbolTableContents = (Lista*) malloc(sizeof(Lista));
         
@@ -175,7 +174,7 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, Sy
 }
 
 
-SymbolGenerico* buscarSymbolTable(string symbolIdentificador, i8 escopo) {
+SymbolGenerico* buscarSymbolTable(string symbolIdentificador, int escopo) {
     if (symbolTableContents == NULL) {
         return NULL;
     }
@@ -185,7 +184,7 @@ SymbolGenerico* buscarSymbolTable(string symbolIdentificador, i8 escopo) {
     chaveBusca.symbolEscopo = escopo;
 
     for (int nivel = escopo; nivel >= 0; nivel--) {
-        chaveBusca.symbolEscopo = (i8) nivel;
+        chaveBusca.symbolEscopo = nivel;
         SymbolGenerico* encontrado = (SymbolGenerico*) buscarElementoLista(symbolTableContents, &chaveBusca);
         if (encontrado != NULL) return encontrado;
     }
@@ -208,7 +207,7 @@ Token* buscarTokenTipoBase(string nomeTipo) {
 // Isso deve ser chamado assim que se termina de compilar um bloco (procedure/function),
 // pra que variáveis/parâmetros daquele escopo deixem de existir/poder ser usados depois
 // que a gente volta pro escopo de fora.
-void removerEscopoSymbolTable(i8 symbolEscopo) {
+void removerEscopoSymbolTable(int symbolEscopo) {
     if (symbolTableContents == NULL) {
         return;
     }

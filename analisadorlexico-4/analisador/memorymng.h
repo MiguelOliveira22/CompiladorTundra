@@ -13,8 +13,9 @@ typedef struct {
 } PonteiroDestrutivel;
 
 Symbol* adicionarSymbolTable(string symbolIdentificador, SymbolCategoria symbolCategoria, SymbolTipo symbolTipo);
-Symbol* buscarSymbolTable(string symbolIdentificador, i8 escopo);
-void removerEscopoSymbolTable(i8 symbolEscopo);
+// extern Lista* customTiposDefinition;
+Symbol* buscarSymbolTable(string symbolIdentificador, int escopo);
+void removerEscopoSymbolTable(int symbolEscopo);
 
 Token* cadastrarTokenToClose(TokenTipo codigo, string conteudo, bool especial);
 void closePonteiros();

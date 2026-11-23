@@ -16,6 +16,7 @@ Token tokenDefinitions[] = {
     { TOKEN_KEYW_ENQUANTO,        "while",     false },
     { TOKEN_KEYW_FACA,            "do",        false },
     { TOKEN_KEYW_VAPARA,          "goto",      false },
+    { TOKEN_KEYW_VAPARA,          "goto",      false },
 
     { TOKEN_SYMB_ATRIBUICAO,      ":=",        true  },
     { TOKEN_SYMB_MAIS,            "+",         true  },

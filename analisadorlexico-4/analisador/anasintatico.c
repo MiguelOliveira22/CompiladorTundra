@@ -50,7 +50,7 @@ static void parametroEndereco(SymbolGenerico* assinatura, int escopo) {
     assinatura->symbolQuantidadeParametros = quantidade;
     int indice = 0;
     for (SymbolParametro* p = assinatura->symbolParameters; p != NULL; p = p->proximo, indice++) {
-        SymbolGenerico* simbolo = buscarSymbolTable((string) p->nome, (i8) escopo);
+        SymbolGenerico* simbolo = buscarSymbolTable((string) p->nome, escopo);
         if (simbolo != NULL) {
             simbolo->symbolIndiceParametro = indice;
             simbolo->symbolParametroPorReferencia = p->porReferencia;
@@ -68,7 +68,7 @@ static void emitirChamada(SymbolGenerico* simbolo, int escopoAtual) {
     char nome[256], nivel[16];
     nomeCodigoSubrotina(nome, sizeof(nome), simbolo);
     snprintf(nivel, sizeof(nivel), "%d", escopoAtual - 1);
-    emitir(CONTROLE_CHAMADA_PROCEDIMENTO, nome, nivel, NULL);
+    emitir(INST_CONTROLE_CHAMADA_PROCEDIMENTO, nome, nivel, NULL);
 }
 
 static void novoRotuloCodigo(char* destino, size_t tamanho, const char* prefixo) {
@@ -96,9 +96,9 @@ static void emitirCargaSimbolo(const SymbolGenerico* simbolo, int escopoAtual) {
         char nivel[16], deslocamento[16];
         snprintf(nivel, sizeof(nivel), "%d", escopoAtual - 1);
         snprintf(deslocamento, sizeof(deslocamento), "%d", simbolo->symbolDeslocamentoResultado);
-        emitir(CARREGA_VALOR, nivel, deslocamento, NULL);
+        emitir(INST_CARREGA_VALOR, nivel, deslocamento, NULL);
     } else {
-        emitirAcesso(simbolo->symbolParametroPorReferencia ? CARREGA_VALOR_INDIRETO : CARREGA_VALOR, simbolo);
+        emitirAcesso(simbolo->symbolParametroPorReferencia ? INST_CARREGA_VALOR_INDIRETO : INST_CARREGA_VALOR, simbolo);
     }
 }
 
@@ -107,9 +107,9 @@ static void emitirArmazenamento(const SymbolGenerico* simbolo, int escopoAtual) 
         char nivel[16], deslocamento[16];
         snprintf(nivel, sizeof(nivel), "%d", escopoAtual - 1);
         snprintf(deslocamento, sizeof(deslocamento), "%d", simbolo->symbolDeslocamentoResultado);
-        emitir(ARMAZENA_VALOR, nivel, deslocamento, NULL);
+        emitir(INST_ARMAZENA_VALOR, nivel, deslocamento, NULL);
     } else {
-        emitirAcesso(simbolo->symbolParametroPorReferencia ? ARMAZENA_VALOR_INDIRETO : ARMAZENA_VALOR, simbolo);
+        emitirAcesso(simbolo->symbolParametroPorReferencia ? INST_ARMAZENA_VALOR_INDIRETO : INST_ARMAZENA_VALOR, simbolo);
     }
 }
 
@@ -133,7 +133,7 @@ static SymbolGenerico* buscarRotuloVisivel(const char* numero, int escopo) {
     char nome[128];
     for (int nivel = escopo; nivel >= 0; nivel--) {
         nomeInternoRotulo(nome, sizeof(nome), nivel, numero);
-        SymbolGenerico* rotulo = buscarSymbolTable(nome, (i8) nivel);
+        SymbolGenerico* rotulo = buscarSymbolTable(nome, nivel);
         if (rotulo != NULL) return rotulo;
     }
     return NULL;
@@ -150,7 +150,7 @@ void resolverTipoBase(Token* tokenTipo, int escopo, SymbolTipo* naturezaResolvid
         return;
     }
 
-    SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador, (i8) escopo);
+    SymbolGenerico* aliasEncontrado = buscarSymbolTable(tokenTipo->identificador, escopo);
 
     if (simboloDaCategoria(aliasEncontrado, TOKEN_KEYW_TIPO)) {
         *naturezaResolvida = aliasEncontrado->symbolTipo;
@@ -167,7 +167,7 @@ void resolverTipoBase(Token* tokenTipo, int escopo, SymbolTipo* naturezaResolvid
 // chamado) realmente existe na tabela de símbolos. Se ele já saiu de escopo (ou nunca
 // foi declarado), buscarSymbolTable não vai encontrar nada e a gente aborta a compilação.
 void verificarSymbolTable(Token* tokenIdentificador, int escopo) {
-    if (buscarSymbolTable(tokenIdentificador->identificador, (i8) escopo) == NULL) {
+    if (buscarSymbolTable(tokenIdentificador->identificador, escopo) == NULL) {
         if (strcmp(tokenIdentificador->identificador, "read") == 0) {
             sairErroTerminal(ERROR_UNDECLARED_IDENTIFIER, "read só está disponível quando 'input' aparece no cabeçalho do programa");
         }
@@ -190,6 +190,9 @@ void analizeSynSem(FILE* file) {
 }
 
 static void compilaPrograma(FILE* file, int escopo) {
+    adicionarSymbolTable("read", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, escopo);
+    adicionarSymbolTable("write", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, escopo);
+    
     Token* tokenValue;
     
     tokenValue = readNextToken(file);
@@ -201,7 +204,7 @@ static void compilaPrograma(FILE* file, int escopo) {
     if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um IDENTIFICADOR!");
     }
-    adicionarSymbolTable(tokenValue->identificador, TOKEN_KEYW_PROGRAMA, TYPE_BASE_NULL, (i8) escopo);
+    adicionarSymbolTable(tokenValue->identificador, TOKEN_KEYW_PROGRAMA, TYPE_BASE_NULL, escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_ABREPARENTESES) {
@@ -213,26 +216,22 @@ static void compilaPrograma(FILE* file, int escopo) {
         if (tokenValue->codigo != TOKEN_OPER_IDENTIFICADOR) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador!");
         }
-        adicionarSymbolTable(tokenValue->identificador, CATG_BASE_VARIAVEL, TYPE_BASE_NULL, (i8) escopo);
+        adicionarSymbolTable(tokenValue->identificador, CATG_BASE_VARIAVEL, TYPE_BASE_NULL, escopo);
 
         tokenValue = readNextToken(file);
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_FECHAPARENTESES) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um virgula ou um fecha parenteses!");
         }
     }
-
-    adicionarSymbolTable("read", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, (i8) escopo);
-    adicionarSymbolTable("write", CATG_BASE_PROCEDIMENTO, TYPE_BASE_NULL, (i8) escopo);
     
     tokenValue = readNextToken(file);
     if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um ponto e virgula!");
     }
-    
-    tokenValue = readNextToken(file);
 
-    writeCommand(CONTROLE_INICIA_PROGRAMA, NULL, 0);
+    writeCommand(INST_CONTROLE_INICIA_PROGRAMA, NULL, 0);
 
+    readNextToken(file);
     compilaBloco(file, escopo + 1, NULL);
     
     tokenValue = getCurrentToken();
@@ -245,7 +244,7 @@ static void compilaPrograma(FILE* file, int escopo) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se fim de arquivo!");
     }
     
-    writeCommand(CONTROLE_PARA, NULL, 0);
+    writeCommand(INST_CONTROLE_PARA, NULL, 0);
     endCompilation();
 
     return;
@@ -265,7 +264,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
         snprintf(rotuloCorpo, sizeof(rotuloCorpo), "%s_BODY", rotuloProcedimento);
         writeLabel(rotuloProcedimento);
         snprintf(nivel, sizeof(nivel), "%d", escopo - 1);
-        emitir(CONTROLE_ENTRADA_PROCEDIMENTO, nivel, NULL, NULL);
+        emitir(INST_CONTROLE_ENTRADA_PROCEDIMENTO, nivel, NULL, NULL);
     } else {
         snprintf(rotuloCorpo, sizeof(rotuloCorpo), "MAIN");
     }
@@ -289,8 +288,8 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
                     sairErroTerminal(ERROR_INSUFFICIENT_MEMORY_MALLOC, "Não foi possível armazenar o identificador do rótulo");
                 }
                 memcpy(nomePersistente, nomeRotulo, tamanhoNome);
-                adicionarSymbolTable(nomePersistente, categoriaRotulo, TYPE_BASE_NULL, NULL, (i8) escopo);
-                buscarSymbolTable(nomePersistente, (i8) escopo)->symbolIdentificadorAlocado = true;
+                adicionarSymbolTable(nomePersistente, categoriaRotulo, TYPE_BASE_NULL, NULL, escopo);
+                buscarSymbolTable(nomePersistente, escopo)->symbolIdentificadorAlocado = true;
                 
                 tokenValue = readNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_VIRGULA && tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -330,7 +329,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
                 Token* referenciaResolvida;
                 resolverTipoBase(tokenValue, escopo, &naturezaResolvida, &referenciaResolvida);
                 
-                adicionarSymbolTable(nomeTipo->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+                adicionarSymbolTable(nomeTipo->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, escopo);
                 
                 tokenValue = readNextToken(file);
                 if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -383,15 +382,15 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
                 char bufferNumero[3];
                 snprintf(bufferNumero, sizeof(bufferNumero), "%d", totalNomes);
                 string params[] = { (string) &bufferNumero };
-                writeCommand(CONTROLE_ALOCA_MEM, params, 1);
+                writeCommand(INST_CONTROLE_ALOCA_MEM, params, 1);
                 
                 SymbolTipo naturezaResolvida;
                 Token* referenciaResolvida;
                 resolverTipoBase(tokenValue, escopo, &naturezaResolvida, &referenciaResolvida);
                 
                 for (int i = 0; i < totalNomes; i++) {
-                    adicionarSymbolTable(nomesVariaveis[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
-                    SymbolGenerico* variavel = buscarSymbolTable(nomesVariaveis[i]->identificador, (i8) escopo);
+                    adicionarSymbolTable(nomesVariaveis[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, escopo);
+                    SymbolGenerico* variavel = buscarSymbolTable(nomesVariaveis[i]->identificador, escopo);
                     variavel->symbolDeslocamento = proximoDeslocamentoLocal[escopo]++;
                     totalLocais++;
                 }
@@ -410,7 +409,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
         
         if (tokenValue->codigo == TOKEN_KEYW_PROCEDIMENTO) {
             if (!saltoCorpoEmitido) {
-                emitir(DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
+                emitir(INST_DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
                 saltoCorpoEmitido = true;
             }
             Token* categoriaSymbol = tokenValue; // Token "procedure", marca a categoria do símbolo
@@ -422,8 +421,8 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             // Registra o procedimento no escopo ATUAL (de fora), pra poder ser chamado
             // por quem o declarou e por si mesmo (recursão), já que só é removido
             // quando esse escopo de fora terminar.
-            adicionarSymbolTable(tokenValue->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
-            SymbolGenerico* simboloProcedimento = buscarSymbolTable(tokenValue->identificador, (i8) escopo);
+            adicionarSymbolTable(tokenValue->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, escopo);
+            SymbolGenerico* simboloProcedimento = buscarSymbolTable(tokenValue->identificador, escopo);
             
             compilaParametrosFormais(file, escopo + 1, simboloProcedimento); // Parâmetros pertencem ao escopo de dentro do bloco
             
@@ -436,7 +435,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             compilaBloco(file, escopo + 1, simboloProcedimento);
             
             // Saiu do bloco do procedimento: parâmetros e variáveis locais dele não existem mais.
-            removerEscopoSymbolTable((i8) (escopo + 1));
+            removerEscopoSymbolTable((escopo + 1));
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -450,7 +449,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
         
         if (tokenValue->codigo == TOKEN_KEYW_FUNCAO) {
             if (!saltoCorpoEmitido) {
-                emitir(DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
+                emitir(INST_DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
                 saltoCorpoEmitido = true;
             }
             Token* categoriaSymbol = tokenValue; // Token "function", marca a categoria do símbolo
@@ -461,8 +460,8 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             }
             Token* nomeFuncao = tokenValue;
 
-            adicionarSymbolTable(nomeFuncao->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
-            SymbolGenerico* simboloFuncao = buscarSymbolTable(nomeFuncao->identificador, (i8) escopo);
+            adicionarSymbolTable(nomeFuncao->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, escopo);
+            SymbolGenerico* simboloFuncao = buscarSymbolTable(nomeFuncao->identificador, escopo);
             
             compilaParametrosFormais(file, escopo + 1, simboloFuncao); // Parâmetros pertencem ao escopo de dentro do bloco
             
@@ -494,7 +493,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             compilaBloco(file, escopo + 1, simboloFuncao);
             
             // Saiu do bloco da função: parâmetros e variáveis locais dela não existem mais.
-            removerEscopoSymbolTable((i8) (escopo + 1));
+            removerEscopoSymbolTable((escopo + 1));
             
             tokenValue = getCurrentToken(); // Pega o Sneaky
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -508,7 +507,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
         
         if (tokenValue->codigo == TOKEN_KEYW_INICIO) { // Verificar aqui
             if (!saltoCorpoEmitido) {
-                emitir(DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
+                emitir(INST_DESVIO_SEMPRE, rotuloCorpo, NULL, NULL);
                 saltoCorpoEmitido = true;
             }
             writeLabel(rotuloCorpo);
@@ -530,13 +529,13 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             if (totalLocais > 0) {
                 char quantidade[16];
                 snprintf(quantidade, sizeof(quantidade), "%d", totalLocais);
-                emitir(CONTROLE_DELOCA_MEM, quantidade, NULL, NULL);
+                emitir(INST_CONTROLE_DELOCA_MEM, quantidade, NULL, NULL);
             }
             if (dono != NULL) {
                 char nivel[16], parametros[16];
                 snprintf(nivel, sizeof(nivel), "%d", escopo - 1);
                 snprintf(parametros, sizeof(parametros), "%d", dono->symbolQuantidadeParametros);
-                emitir(CONTROLE_RETORNA_PROCEDIMENTO, nivel, parametros, NULL);
+                emitir(INST_CONTROLE_RETORNA_PROCEDIMENTO, nivel, parametros, NULL);
             }
             
             return;
@@ -601,7 +600,7 @@ void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura
                 resolverTipoBase(tokenValue, escopo, &naturezaResolvida, &referenciaResolvida);
             
             for (int i = 0; i < totalNomes; i++) {
-                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, escopo);
                 adicionarParametro(assinatura, nomesParametros[i]->identificador, naturezaResolvida, porReferencia);
             }
             
@@ -648,7 +647,7 @@ void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura
             resolverTipoBase(tokenValue, escopo, &naturezaResolvida, &referenciaResolvida);
             
             for (int i = 0; i < totalNomes; i++) {
-                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, (i8) escopo);
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, naturezaResolvida, referenciaResolvida, escopo);
                 adicionarParametro(assinatura, nomesParametros[i]->identificador, TYPE_BASE_NULL, false);
             }
             
@@ -690,7 +689,7 @@ void compilaParametrosFormais(FILE* file, int escopo, SymbolGenerico* assinatura
             
             // Parâmetros do tipo "procedure" não têm tipo de retorno: natureza fica desconhecida.
             for (int i = 0; i < totalNomes; i++) {
-                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, (i8) escopo);
+                adicionarSymbolTable(nomesParametros[i]->identificador, categoriaSymbol, TYPE_BASE_NULL, NULL, escopo);
                 adicionarParametro(assinatura, nomesParametros[i]->identificador, TYPE_BASE_NULL, false);
             }
             
@@ -735,13 +734,13 @@ static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
                 sairErroTerminal(ERROR_INVALID_CALL, "read aceita apenas variáveis como argumentos");
             }
             verificarSymbolTable(tokenValue, escopo);
-            SymbolGenerico* destino = buscarSymbolTable(tokenValue->identificador, (i8) escopo);
+            SymbolGenerico* destino = buscarSymbolTable(tokenValue->identificador, escopo);
             if (!simboloDaCategoria(destino, TOKEN_KEYW_VARIAVEL)) {
                 sairErroTerminal(ERROR_INVALID_CALL, "O argumento de read precisa ser uma variável gravável");
             }
             exigirTipo(destino->symbolTipo, TYPE_BASE_INTEGER, "read aceita apenas variáveis do tipo integer");
             tipoArgumento = destino->symbolTipo;
-            emitir(CONTROLE_LEITURA, NULL, NULL, NULL);
+            emitir(INST_CONTROLE_LEITURA, NULL, NULL, NULL);
             emitirArmazenamento(destino, escopo);
             tokenValue = readNextToken(file);
         } else if (!builtinIO && parametro != NULL && parametro->porReferencia) {
@@ -749,19 +748,19 @@ static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
                 sairErroTerminal(ERROR_INVALID_CALL, "O parâmetro var exige um argumento variável");
             }
             verificarSymbolTable(tokenValue, escopo);
-            SymbolGenerico* argumento = buscarSymbolTable(tokenValue->identificador, (i8) escopo);
+            SymbolGenerico* argumento = buscarSymbolTable(tokenValue->identificador, escopo);
             if (!simboloDaCategoria(argumento, TOKEN_KEYW_VARIAVEL)) {
                 sairErroTerminal(ERROR_INVALID_CALL, "O parâmetro var exige um argumento gravável");
             }
             tipoArgumento = argumento->symbolTipo;
-            if (argumento->symbolParametroPorReferencia) emitirAcesso(CARREGA_VALOR, argumento);
-            else emitirAcesso(CARREGA_ENDERECO, argumento);
+            if (argumento->symbolParametroPorReferencia) emitirAcesso(INST_CARREGA_VALOR, argumento);
+            else emitirAcesso(INST_CARREGA_ENDERECO, argumento);
             tokenValue = readNextToken(file);
         } else {
             tipoArgumento = compilaExpressaoAtual(file, escopo);
             if (builtinIO) {
                 exigirTipo(tipoArgumento, TYPE_BASE_INTEGER, "write aceita apenas expressões do tipo integer");
-                emitir(CONTROLE_IMPRIME, NULL, NULL, NULL);
+                emitir(INST_CONTROLE_IMPRIME, NULL, NULL, NULL);
             }
             tokenValue = getCurrentToken();
         }
@@ -825,7 +824,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
     
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) { // Atribuição, procedimento e função
         verificarSymbolTable(tokenValue, escopo); // Garante que esse identificador foi declarado (e ainda está em escopo)
-        SymbolGenerico* simboloAtual = buscarSymbolTable(tokenValue->identificador, (i8) escopo);
+        SymbolGenerico* simboloAtual = buscarSymbolTable(tokenValue->identificador, escopo);
         bool chamadaComParenteses = false;
         bool atribuicao = false;
         
@@ -834,7 +833,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) { // Chamada Função
             chamadaComParenteses = true;
             bool chamadaFuncao = simboloDaCategoria(simboloAtual, TOKEN_KEYW_FUNCAO);
-            if (chamadaFuncao) emitir(CONTROLE_ALOCA_MEM, "1", NULL, NULL);
+            if (chamadaFuncao) emitir(INST_CONTROLE_ALOCA_MEM, "1", NULL, NULL);
             compilarArgumentos(file, escopo, simboloAtual);
             if (!ehBuiltinIO(simboloAtual)) emitirChamada(simboloAtual, escopo);
             tokenValue = getCurrentToken();
@@ -912,7 +911,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
         nomeRotuloCodigo(rotuloCodigo, sizeof(rotuloCodigo), simboloRotulo->symbolEscopo, numeroRotulo);
         snprintf(nivelDestino, sizeof(nivelDestino), "%d", (int) simboloRotulo->symbolEscopo - 1);
         snprintf(nivelAtual, sizeof(nivelAtual), "%d", escopo - 1);
-        emitir(DESVIO_ROTULO, rotuloCodigo, nivelDestino, nivelAtual);
+        emitir(INST_DESVIO_ROTULO, rotuloCodigo, nivelDestino, nivelAtual);
         readNextToken(file); // Sneaky
         return;
     }
@@ -947,7 +946,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
         novoRotuloCodigo(rotuloSenao, sizeof(rotuloSenao), "ELSE");
         novoRotuloCodigo(rotuloFim, sizeof(rotuloFim), "ENDIF");
         tokenValue = readNextToken(file);
-        emitir(DESVIO_FALSO, rotuloSenao, NULL, NULL);
+        emitir(INST_DESVIO_FALSO, rotuloSenao, NULL, NULL);
         compilaComandoAtual(file, escopo);
         
         tokenValue = getCurrentToken(); // Gets Skenay
@@ -956,7 +955,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
             return;
         }
         
-        emitir(DESVIO_SEMPRE, rotuloFim, NULL, NULL);
+        emitir(INST_DESVIO_SEMPRE, rotuloFim, NULL, NULL);
         writeLabel(rotuloSenao);
         tokenValue = readNextToken(file);
         compilaComandoAtual(file, escopo); // Sneaky
@@ -978,9 +977,9 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
         }
         
         readNextToken(file);
-        emitir(DESVIO_FALSO, rotuloFim, NULL, NULL);
+        emitir(INST_DESVIO_FALSO, rotuloFim, NULL, NULL);
         compilaComandoAtual(file, escopo); // Sneaky
-        emitir(DESVIO_SEMPRE, rotuloInicio, NULL, NULL);
+        emitir(INST_DESVIO_SEMPRE, rotuloInicio, NULL, NULL);
         writeLabel(rotuloFim);
         return;
     }
@@ -1014,12 +1013,12 @@ static SymbolTipo compilaExpressaoAtual(FILE* file, int escopo) {
         exigirTipo(direita, TYPE_BASE_INTEGER, "Comparações de ordem aceitam apenas valores numéricos");
     }
     switch (operador) {
-        case TOKEN_SYMB_IGUAL: emitir(COMPARA_IGUAL, NULL, NULL, NULL); break;
-        case TOKEN_SYMB_DIFERENTE: emitir(COMPARA_DESIGUAL, NULL, NULL, NULL); break;
-        case TOKEN_SYMB_MENOR: emitir(COMPARA_MENOR, NULL, NULL, NULL); break;
-        case TOKEN_SYMB_MAIOR: emitir(COMPARA_MAIOR, NULL, NULL, NULL); break;
-        case TOKEN_SYMB_MENORIGUAL: emitir(COMPARA_MENOR_IGUAL, NULL, NULL, NULL); break;
-        case TOKEN_SYMB_MAIORIGUAL: emitir(COMPARA_MAIOR_IGUAL, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_IGUAL: emitir(INST_COMPARA_IGUAL, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_DIFERENTE: emitir(INST_COMPARA_DESIGUAL, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_MENOR: emitir(INST_COMPARA_MENOR, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_MAIOR: emitir(INST_COMPARA_MAIOR, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_MENORIGUAL: emitir(INST_COMPARA_MENOR_IGUAL, NULL, NULL, NULL); break;
+        case TOKEN_SYMB_MAIORIGUAL: emitir(INST_COMPARA_MAIOR_IGUAL, NULL, NULL, NULL); break;
         default: break;
     }
     return TYPE_BASE_BOOLEAN;
@@ -1038,7 +1037,7 @@ static SymbolTipo compilaExpressaoSimples(FILE* file, int escopo) {
     SymbolTipo tipo = compilaTermo(file, escopo);
     if (sinal == TOKEN_SYMB_MAIS || sinal == TOKEN_SYMB_MENOS) {
         exigirTipo(tipo, TYPE_BASE_INTEGER, "O sinal unário aceita apenas valores numéricos");
-        if (sinal == TOKEN_SYMB_MENOS) emitir(OPERA_INVERTE_SINAL, NULL, NULL, NULL);
+        if (sinal == TOKEN_SYMB_MENOS) emitir(INST_OPERA_INVERTE_SINAL, NULL, NULL, NULL);
     }
 
     while (true) {
@@ -1048,14 +1047,14 @@ static SymbolTipo compilaExpressaoSimples(FILE* file, int escopo) {
             readNextToken(file);
             SymbolTipo tipoDireito = compilaTermo(file, escopo);
             exigirTipo(tipoDireito, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
-            emitir(tokenValue->codigo == TOKEN_SYMB_MAIS ? OPERA_SOMA : OPERA_SUBTRACAO, NULL, NULL, NULL);
+            emitir(tokenValue->codigo == TOKEN_SYMB_MAIS ? INST_OPERA_SOMA : INST_OPERA_SUBTRACAO, NULL, NULL, NULL);
             tipo = TYPE_BASE_INTEGER;
         } else if (tokenValue->codigo == TOKEN_SYMB_OU) {
             exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
             readNextToken(file);
             SymbolTipo tipoDireito = compilaTermo(file, escopo);
             exigirTipo(tipoDireito, TYPE_BASE_BOOLEAN, "O operador or aceita apenas valores booleanos");
-            emitir(OPERA_DISJUNCAO, NULL, NULL, NULL);
+            emitir(INST_OPERA_DISJUNCAO, NULL, NULL, NULL);
             tipo = TYPE_BASE_BOOLEAN;
         } else {
             return tipo;
@@ -1073,14 +1072,14 @@ static SymbolTipo compilaTermo(FILE* file, int escopo) {
             readNextToken(file);
             SymbolTipo tipoDireito = compilaFator(file, escopo);
             exigirTipo(tipoDireito, TYPE_BASE_INTEGER, "Operadores aritméticos aceitam apenas valores numéricos");
-            emitir(tokenValue->codigo == TOKEN_SYMB_VEZES ? OPERA_MULTIPLICACAO : OPERA_DIVISAO, NULL, NULL, NULL);
+            emitir(tokenValue->codigo == TOKEN_SYMB_VEZES ? INST_OPERA_MULTIPLICACAO : INST_OPERA_DIVISAO, NULL, NULL, NULL);
             tipo = TYPE_BASE_INTEGER;
         } else if (tokenValue->codigo == TOKEN_SYMB_E) {
             exigirTipo(tipo, TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
             readNextToken(file);
             SymbolTipo tipoDireito = compilaFator(file, escopo);
             exigirTipo(tipoDireito, TYPE_BASE_BOOLEAN, "O operador and aceita apenas valores booleanos");
-            emitir(OPERA_CONJUNCAO, NULL, NULL, NULL);
+            emitir(INST_OPERA_CONJUNCAO, NULL, NULL, NULL);
             tipo = TYPE_BASE_BOOLEAN;
         } else {
             return tipo;
@@ -1094,14 +1093,14 @@ static SymbolTipo compilaFator(FILE* file, int escopo) {
 
     if (tokenValue->codigo == TOKEN_OPER_IDENTIFICADOR) {
         verificarSymbolTable(tokenValue, escopo);
-        SymbolGenerico* simbolo = buscarSymbolTable(tokenValue->identificador, (i8) escopo);
+        SymbolGenerico* simbolo = buscarSymbolTable(tokenValue->identificador, escopo);
         tokenValue = readNextToken(file);
 
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
             if (!simboloDaCategoria(simbolo, TOKEN_KEYW_FUNCAO)) {
                 sairErroTerminal(ERROR_INVALID_CALL, "Somente funções podem ser usadas em expressões; procedimentos não retornam valores");
             }
-            emitir(CONTROLE_ALOCA_MEM, "1", NULL, NULL);
+            emitir(INST_CONTROLE_ALOCA_MEM, "1", NULL, NULL);
             compilarArgumentos(file, escopo, simbolo);
             emitirChamada(simbolo, escopo);
             return simbolo->symbolTipo;
@@ -1115,7 +1114,7 @@ static SymbolTipo compilaFator(FILE* file, int escopo) {
             if (simbolo->symbolParameters != NULL) {
                 sairErroTerminal(ERROR_ARGUMENT_COUNT, "A função exige argumentos conforme sua declaração");
             }
-            emitir(CONTROLE_ALOCA_MEM, "1", NULL, NULL);
+            emitir(INST_CONTROLE_ALOCA_MEM, "1", NULL, NULL);
             emitirChamada(simbolo, escopo);
             return simbolo->symbolTipo;
         }
@@ -1127,7 +1126,7 @@ static SymbolTipo compilaFator(FILE* file, int escopo) {
     }
 
     if (tokenValue->codigo == TOKEN_OPER_NUMERO) {
-        emitir(CARREGA_CONSTANTE, tokenValue->identificador, NULL, NULL);
+        emitir(INST_CARREGA_CONSTANTE, tokenValue->identificador, NULL, NULL);
         readNextToken(file);
         return TYPE_BASE_INTEGER;
     }
@@ -1145,7 +1144,7 @@ static SymbolTipo compilaFator(FILE* file, int escopo) {
     if (tokenValue->codigo == TOKEN_SYMB_NAO) {
         readNextToken(file);
         exigirTipo(compilaFator(file, escopo), TYPE_BASE_BOOLEAN, "O operador not aceita apenas valores booleanos");
-        emitir(OPERA_NEGACAO, NULL, NULL, NULL);
+        emitir(INST_OPERA_NEGACAO, NULL, NULL, NULL);
         return TYPE_BASE_BOOLEAN;
     }
 

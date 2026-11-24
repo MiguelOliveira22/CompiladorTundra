@@ -29,6 +29,8 @@ static void compilaPrograma(FILE* file, int escopo) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "");
     }
 
+    // TODO: Armazenar Nome Programa Para Chamada de Procedimento Main;
+
     ctk = readNextToken(file);
     if (ctk->codigo != TOKEN_SYMB_ABREPARENTESES) {
         sairErroTerminal(ERROR_INVALID_TOKEN, "");
@@ -69,6 +71,7 @@ static void compilaPrograma(FILE* file, int escopo) {
     }
 
     writeCommand(INST_CONTROLE_PARA, NULL, 0);
+
     return;
 }
 
@@ -125,7 +128,7 @@ static void compilaBloco(FILE* file, int escopo) {
 
         if (ctk->codigo == TOKEN_KEYW_VARIAVEL) {
             ctk = readNextToken(file);
-            
+
             do {
                 if (ctk->codigo != TOKEN_OPER_IDENTIFICADOR) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "");
@@ -230,6 +233,8 @@ static void compilaBloco(FILE* file, int escopo) {
                 ctk = getCurrentToken();
             } while (ctk->codigo != TOKEN_KEYW_FIM);
 
+            writeCommand(INST_CONTROLE_DELOCA_MEM, ); // TODO: Descrever o Dealoc da Memória
+
             return;
         }
 
@@ -237,13 +242,14 @@ static void compilaBloco(FILE* file, int escopo) {
     }
 }
 
-static void compilaParametrosFormais(FILE* file, int escopo) {
+// Retorna a Lista de Parametros
+static Lista compilaParametrosFormais(FILE* file, int escopo) {
     Token* ctk;
 
     while (true) {
         ctk = getCurrentToken();
         if (ctk->codigo == TOKEN_SYMB_FECHAPARENTESES) {
-            return; // TODO: retornar lista
+            return; // TODO: Retornar Lista
         }
 
         ctk = readNextToken(file);
@@ -342,12 +348,50 @@ static void compilaTipo(FILE* file, int escopo) {
     sairErroTerminal(ERROR_INVALID_TOKEN, "");
 }
 
-static void compilaComando() {
+static void compilaComando(FILE* file, int escopo) {
+    Token* ctk;
 
+    ctk = readNextToken(file);
+    if (ctk->codigo == TOKEN_OPER_NUMERO) {
+        // Adicionar Label No Escopo
+
+        ctk = readNextToken(file);
+        if (ctk->codigo != TOKEN_SYMB_DOISPONTOS) {
+            sairErroTerminal(ERROR_INVALID_TOKEN, "");
+        }
+
+        readNextToken(file);
+    }
+
+    compilaComandoSemRotulo();
 }
 
 static void compilaComandoSemRotulo() {
+    Token* ctk;
 
+    ctk = getCurrentToken();
+
+    if (ctk->codigo == TOKEN_OPER_IDENTIFICADOR) {
+
+    }
+
+    if (ctk->codigo == TOKEN_KEYW_VAPARA) {
+
+    }
+
+    if (ctk->codigo == TOKEN_KEYW_INICIO) {
+
+    }
+
+    if (ctk->codigo == TOKEN_KEYW_SE) {
+
+    }
+
+    if (ctk->codigo == TOKEN_KEYW_ENQUANTO) {
+
+    }
+
+    sairErroTerminal(ERROR_INVALID_TOKEN, "");
 }
 
 static void compilaExpressao() {

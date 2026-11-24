@@ -790,7 +790,7 @@ static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
         if (tokenValue->codigo != TOKEN_SYMB_VIRGULA) {
             sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se vírgula ou fecha parênteses após o argumento da função");
         }
-        readNextToken(file);
+        tokenValue = readNextToken(file);
     }
 
     if (!builtinIO && parametro != NULL) {

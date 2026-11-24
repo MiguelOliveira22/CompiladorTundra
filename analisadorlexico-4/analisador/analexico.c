@@ -243,6 +243,7 @@ Token* readNextToken(FILE* currentFile) {
             findNextToken(currentFile);
         }
 
+        printf("%s\n", storedToken->identificador);
         return getCurrentToken();
     }
 }

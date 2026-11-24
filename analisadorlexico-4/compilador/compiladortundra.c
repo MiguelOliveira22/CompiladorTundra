@@ -54,7 +54,7 @@ FILE* file;
 
 void writeCommand(IndiceInstrucao i, string parametros[], int n) {
     if (file == NULL) {
-        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+        file = fopen(nomeArquivoInstrucoes, "w");
     }
 
     if (file == NULL) {
@@ -72,12 +72,26 @@ void writeCommand(IndiceInstrucao i, string parametros[], int n) {
 
 void writeLabel(const char* label) {
     if (file == NULL) {
-        file = fopen("tundrafiles/compfiles/resultado.tpb", "w");
+        file = fopen(nomeArquivoInstrucoes, "w");
     }
     if (file == NULL) {
         sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
     }
     fprintf(file, "%s: NADA\n", label);
+}
+
+void writeLabeledCommand(const char* label, IndiceInstrucao i, string parametros[], int n) {
+    if (file == NULL) {
+        file = fopen(nomeArquivoInstrucoes, "w");
+    }
+    if (file == NULL) {
+        sairErroTerminal(ERROR_FILE_PROGRAM_FILE_NOT_ALLOCATED, "Programa não foi capaz de alocar o arquivo de objeto");
+    }
+    fprintf(file, "%s: %s", label, codigoInstrucao[i]);
+    for (int k = 0; k < n; k++) {
+        fprintf(file, "%s%s", (k == 0) ? " " : ",", parametros[k]);
+    }
+    fprintf(file, "\n");
 }
 
 void endCompilation() {

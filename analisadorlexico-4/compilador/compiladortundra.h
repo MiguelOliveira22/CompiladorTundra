@@ -52,7 +52,10 @@ typedef enum {
 
 extern string codigoInstrucao[XINTERNAL_LIMITE_TABELA_INSTRUCOES];
 void writeCommand(IndiceInstrucao i, string parametros[], int n);
+void writeLabeledCommand(const char* label, IndiceInstrucao i, string parametros[], int n);
 void writeLabel(const char* label);
 void endCompilation();
+
+extern string nomeArquivoInstrucoes;
 
 #endif

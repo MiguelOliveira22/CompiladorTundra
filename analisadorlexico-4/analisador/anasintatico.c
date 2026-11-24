@@ -273,9 +273,9 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
         char rotuloProcedimento[256], nivel[16];
         nomeCodigoSubrotina(rotuloProcedimento, sizeof(rotuloProcedimento), dono);
         snprintf(rotuloCorpo, sizeof(rotuloCorpo), "%s_BODY", rotuloProcedimento);
-        writeLabel(rotuloProcedimento);
         snprintf(nivel, sizeof(nivel), "%d", escopo - 1);
-        emitir(CONTROLE_ENTRADA_PROCEDIMENTO, nivel, NULL, NULL);
+        string parametros[] = { nivel };
+        writeLabeledCommand(rotuloProcedimento, CONTROLE_ENTRADA_PROCEDIMENTO, parametros, 1);
     } else {
         snprintf(rotuloCorpo, sizeof(rotuloCorpo), "MAIN");
     }
@@ -390,7 +390,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
                     sairErroTerminal(ERROR_INVALID_TOKEN, "Esperava-se um identificador");
                 }
 
-                char bufferNumero[3];
+                char bufferNumero[16];
                 snprintf(bufferNumero, sizeof(bufferNumero), "%d", totalNomes);
                 string params[] = { (string) &bufferNumero };
                 writeCommand(CONTROLE_ALOCA_MEM, params, 1);
@@ -802,6 +802,14 @@ static void compilarArgumentos(FILE* file, int escopo, SymbolGenerico* funcao) {
 
 static void compilaComandoAtual(FILE* file, int escopo) {
     Token* tokenValue = getCurrentToken();
+
+    // A gramática de comandos permite o comando vazio. O chamador consome o
+    // separador ';' ou o delimitador 'end', portanto apenas retornamos aqui.
+    if (tokenValue->codigo == TOKEN_SYMB_PONTOVIRGULA ||
+        tokenValue->codigo == TOKEN_KEYW_FIM ||
+        tokenValue->codigo == TOKEN_KEYW_SENAO) {
+        return;
+    }
     
     if (tokenValue->codigo == TOKEN_OPER_NUMERO) {   // Comando Padrão e Adição de Rótulo
         char numeroRotulo[128];
@@ -820,7 +828,11 @@ static void compilaComandoAtual(FILE* file, int escopo) {
 
         char rotuloCodigo[160];
         nomeRotuloCodigo(rotuloCodigo, sizeof(rotuloCodigo), simboloRotulo->symbolEscopo, numeroRotulo);
-        writeLabel(rotuloCodigo);
+        char nivelRotulo[16], locaisRotulo[16];
+        snprintf(nivelRotulo, sizeof(nivelRotulo), "%d", escopo - 1);
+        snprintf(locaisRotulo, sizeof(locaisRotulo), "%d", proximoDeslocamentoLocal[escopo]);
+        string parametros[] = { nivelRotulo, locaisRotulo };
+        writeLabeledCommand(rotuloCodigo, CONTROLE_ENTRAR_ROTULO, parametros, 2);
         
         tokenValue = readNextToken(file);
     }

@@ -27,7 +27,7 @@ typedef struct SymbolParametro {
     struct SymbolParametro* proximo;
 } SymbolParametro;
 
-typedef struct {
+typedef struct SymbolGenerico {
     string symbolIdentificador;
     Token* symbolCategoria;
     SymbolTipo symbolTipo;
@@ -36,6 +36,8 @@ typedef struct {
     bool symbolIdentificadorAlocado;
     int symbolDeslocamento;
     bool symbolParametroPorReferencia;
+    bool symbolResultadoFuncao;
+    struct SymbolGenerico* symbolFuncaoResultado;
     bool symbolBuiltinIO;
     int symbolIndiceParametro;
     int symbolQuantidadeParametros;

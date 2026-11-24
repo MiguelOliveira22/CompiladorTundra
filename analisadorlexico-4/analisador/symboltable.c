@@ -83,6 +83,8 @@ void adicionarSymbolTable(string symbolIdentificador, Token* symbolCategoria, Sy
     novoSymbol->symbolIdentificadorAlocado = false;
     novoSymbol->symbolDeslocamento = 0;
     novoSymbol->symbolParametroPorReferencia = false;
+    novoSymbol->symbolResultadoFuncao = false;
+    novoSymbol->symbolFuncaoResultado = NULL;
     novoSymbol->symbolBuiltinIO = false;
     novoSymbol->symbolIndiceParametro = -1;
     novoSymbol->symbolQuantidadeParametros = 0;

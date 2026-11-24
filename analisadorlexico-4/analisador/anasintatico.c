@@ -26,6 +26,13 @@ static unsigned long contadorRotulosCodigo = 0;
 static void emitir(IndiceInstrucao instrucao, const char* a, const char* b, const char* c);
 static bool simboloDaCategoria(SymbolGenerico* symbol, TokenTipo categoria);
 
+static SymbolGenerico* funcaoChamavel(SymbolGenerico* simbolo) {
+    if (simbolo != NULL && simbolo->symbolResultadoFuncao) {
+        return simbolo->symbolFuncaoResultado;
+    }
+    return simbolo;
+}
+
 static void adicionarParametro(SymbolGenerico* assinatura, const char* nome, SymbolTipo tipo, bool porReferencia) {
     if (assinatura == NULL) { return; }
 
@@ -54,10 +61,13 @@ static void parametroEndereco(SymbolGenerico* assinatura, int escopo) {
         if (simbolo != NULL) {
             simbolo->symbolIndiceParametro = indice;
             simbolo->symbolParametroPorReferencia = p->porReferencia;
-            simbolo->symbolDeslocamento = -3 - quantidade + indice;
+            // Na convenção final do capítulo 8, o primeiro parâmetro fica
+            // em -4 e os seguintes ocupam posições crescentes na ativação.
+            simbolo->symbolDeslocamento = -4 + indice;
         }
     }
-    assinatura->symbolDeslocamentoResultado = -4 - quantidade;
+    // O resultado da função ocupa a posição reservada antes dos argumentos.
+    assinatura->symbolDeslocamentoResultado = -5;
 }
 
 static void nomeCodigoSubrotina(char* destino, size_t tamanho, const SymbolGenerico* simbolo) {
@@ -494,6 +504,7 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             // com o tipo de retorno já resolvido.
             simboloFuncao->symbolTipo = naturezaResolvida;
             simboloFuncao->referenciaNatureza = referenciaResolvida;
+            simboloFuncao->symbolDeslocamentoResultado = -5;
             
             tokenValue = readNextToken(file);
             if (tokenValue->codigo != TOKEN_SYMB_PONTOVIRGULA) {
@@ -501,6 +512,18 @@ void compilaBloco(FILE* file, int escopo, SymbolGenerico* dono) {
             }
             
             readNextToken(file);
+
+            // O resultado da função é uma variável implícita do ambiente do
+            // corpo. A função chamável permanece no escopo externo; o vínculo
+            // permite resolver f(...) como chamada e f, sem parênteses, como
+            // a variável que recebe o resultado.
+            adicionarSymbolTable(nomeFuncao->identificador, definicaoToken(TOKEN_KEYW_VARIAVEL),
+                naturezaResolvida, referenciaResolvida, (i8) (escopo + 1));
+            SymbolGenerico* variavelResultado = buscarSymbolTable(nomeFuncao->identificador, (i8) (escopo + 1));
+            variavelResultado->symbolResultadoFuncao = true;
+            variavelResultado->symbolFuncaoResultado = simboloFuncao;
+            variavelResultado->symbolDeslocamento = simboloFuncao->symbolDeslocamentoResultado;
+
             compilaBloco(file, escopo + 1, simboloFuncao);
             
             // Saiu do bloco da função: parâmetros e variáveis locais dela não existem mais.
@@ -855,10 +878,11 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
         
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) { // Chamada Função
             chamadaComParenteses = true;
-            bool chamadaFuncao = simboloDaCategoria(simboloAtual, TOKEN_KEYW_FUNCAO);
+            SymbolGenerico* alvoChamada = funcaoChamavel(simboloAtual);
+            bool chamadaFuncao = simboloDaCategoria(alvoChamada, TOKEN_KEYW_FUNCAO);
             if (chamadaFuncao) emitir(CONTROLE_ALOCA_MEM, "1", NULL, NULL);
-            compilarArgumentos(file, escopo, simboloAtual);
-            if (!ehBuiltinIO(simboloAtual)) emitirChamada(simboloAtual, escopo);
+            compilarArgumentos(file, escopo, alvoChamada);
+            if (!ehBuiltinIO(alvoChamada)) emitirChamada(alvoChamada, escopo);
             tokenValue = getCurrentToken();
             if (chamadaFuncao && tokenValue->codigo != TOKEN_SYMB_ATRIBUICAO) {
                 sairErroTerminal(ERROR_INVALID_CALL, "Uma função só pode ser chamada numa expressão");
@@ -875,9 +899,7 @@ void compilaComandoSemRotulo(FILE* file, int escopo) {
             }
             atribuicao = true;
 
-            bool atribuicaoResultadoFuncao = simboloDaCategoria(simboloAtual, TOKEN_KEYW_FUNCAO) &&
-                escopo == (int) simboloAtual->symbolEscopo + 1;
-            if (!simboloDaCategoria(simboloAtual, TOKEN_KEYW_VARIAVEL) && !atribuicaoResultadoFuncao) {
+            if (!simboloDaCategoria(simboloAtual, TOKEN_KEYW_VARIAVEL)) {
                 sairErroTerminal(ERROR_INVALID_CALL, "A atribuição exige uma variável ou o resultado da função atual");
             }
             
@@ -1119,13 +1141,14 @@ static SymbolTipo compilaFator(FILE* file, int escopo) {
         tokenValue = readNextToken(file);
 
         if (tokenValue->codigo == TOKEN_SYMB_ABREPARENTESES) {
-            if (!simboloDaCategoria(simbolo, TOKEN_KEYW_FUNCAO)) {
+            SymbolGenerico* alvoChamada = funcaoChamavel(simbolo);
+            if (!simboloDaCategoria(alvoChamada, TOKEN_KEYW_FUNCAO)) {
                 sairErroTerminal(ERROR_INVALID_CALL, "Somente funções podem ser usadas em expressões; procedimentos não retornam valores");
             }
             emitir(CONTROLE_ALOCA_MEM, "1", NULL, NULL);
-            compilarArgumentos(file, escopo, simbolo);
-            emitirChamada(simbolo, escopo);
-            return simbolo->symbolTipo;
+            compilarArgumentos(file, escopo, alvoChamada);
+            emitirChamada(alvoChamada, escopo);
+            return alvoChamada->symbolTipo;
         }
 
         if (tokenValue->codigo == TOKEN_SYMB_ABRECOLCHETES) {

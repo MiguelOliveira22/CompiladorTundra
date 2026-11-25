@@ -1,5 +1,5 @@
-#ifndef compiladortundra
-#define compiladortundra
+#ifndef COMPILADORTUNDRA_H
+#define COMPILADORTUNDRA_H
 
 #include "basics.h"
 

@@ -1,5 +1,5 @@
-#ifndef lista
-#define lista
+#ifndef LISTA_H
+#define LISTA_H
 
 #include "basics.h"
 

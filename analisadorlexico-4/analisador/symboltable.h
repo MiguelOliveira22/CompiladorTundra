@@ -1,5 +1,5 @@
-#ifndef symboltable
-#define symboltable
+#ifndef SYMBOLTABLE_H
+#define SYMBOLTABLE_H
 
 #include "tokenlexico.h"
 #include "basics.h"

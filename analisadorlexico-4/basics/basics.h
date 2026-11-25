@@ -1,5 +1,5 @@
-#ifndef basics
-#define basics
+#ifndef BASICS_H
+#define BASICS_H
 
 typedef char* string;
 typedef void* Elemento;

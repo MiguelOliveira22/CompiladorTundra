@@ -1,5 +1,5 @@
-#ifndef memorymng
-#define memorymng
+#ifndef MEMORYMNG_H
+#define MEMORYMNG_H
 
 #include "lista.h"
 #include "tokenlexico.h"

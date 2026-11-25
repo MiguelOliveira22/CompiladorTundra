@@ -1,5 +1,5 @@
-#ifndef anasintatico
-#define anasintatico
+#ifndef ANASINTATICO_H
+#define ANASINTATICO_H
 
 #define MAX_VARIAVEIS_POR_DECLARACAO 64
 #define NOME_COMPONENTE_SINTATICO "[anasintatico]"

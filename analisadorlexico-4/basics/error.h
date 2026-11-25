@@ -1,5 +1,5 @@
-#ifndef error
-#define error
+#ifndef ERROR_H
+#define ERROR_H
 
 #include "basics.h"
 

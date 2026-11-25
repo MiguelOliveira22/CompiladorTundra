@@ -1,5 +1,5 @@
-#ifndef analexico
-#define analexico
+#ifndef ANALEXICO_H
+#define ANALEXICO_H
 
 #include "tokenlexico.h"
 

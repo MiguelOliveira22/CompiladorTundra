@@ -1,5 +1,5 @@
-#ifndef tokenlexico
-#define tokenlexico
+#ifndef TOKENLEXICO_H
+#define TOKENLEXICO_H
 
 #include "basics.h"
 

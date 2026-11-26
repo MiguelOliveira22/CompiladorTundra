@@ -1,7 +1,27 @@
-run:
-	gcc main.c basics/error.c estruturas/lista.c analisador/memorymng.c \
-	analisador/analexico.c analisador/anasintatico.c \
-	analisador/symboltable.c analisador/tokenlexico.c \
-	compilador/compiladortundra.c \
-	-Ianalisador -Ibasics -Iestruturas -Icompilador \
-	-o ./tundra -std=c99
+PRJ_NAME := tundra
+
+SOURCE_FILES := $(wildcard ./src/*.c)
+BUILD_FILES := $(subst .c,.o,$(subst src,build,$(SOURCE_FILES)))
+
+HEADER_PATH := include
+
+CC := gcc
+CC_FLAGS := -c -std=c99 -I$(HEADER_PATH)
+
+all: buildFolder $(PRJ_NAME)
+
+$(PRJ_NAME): $(BUILD_FILES)
+	$(CC) $^ -o $@
+
+./build/%.o: ./src/%.c ./include/%.h
+	$(CC) $< $(CC_FLAGS) -o $@
+
+./build/main.o: ./src/main.c
+	$(CC) main.c $(CC_FLAGS) -o main.o
+
+buildFolder:
+	@ mkdir -p build
+
+clean:
+	@ rm -rf ./build/*.o $(PRJ_NAME) *~
+	@ rmdir objects
